@@ -5,12 +5,25 @@
 This module exposes a REST API that the Matrix-FoundryVTT bridge can use to interact with FoundryVTT at a deeper level, including:
 
 - **Full dice roller integration** - Execute dice rolls with Foundry's dice roller
-- **Skill checks** - Perform skill checks with character modifiers
-- **Ability checks** - Perform ability checks with character modifiers  
-- **Saving throws** - Roll saving throws against DCs
-- **Character data access** - Retrieve character sheet information
+- **Generic attribute checks** - Perform checks on ANY character attribute (SYSTEM-AGNOSTIC)
+- **Saving throws** - Roll saving throws against target numbers (SYSTEM-AGNOSTIC)
+- **Character data access** - Retrieve character sheet information from any game system
 - **Item/equipment access** - Search and retrieve item data
 - **Custom commands** - Execute module-specific commands
+
+## 🎯 System-Agnostic Design
+
+**This module works with ANY FoundryVTT game system**, including:
+- **Alien RPG** (stress, composure, agility, etc.)
+- **D&D 5e** (strength, dexterity, constitution, intelligence, wisdom, charisma)
+- **Call of Cthulhu** (strength, dexterity, intelligence, etc.)
+- **Pathfinder 1e/2e** (strength, dexterity, constitution, etc.)
+- **Starfinder**
+- **Cyberpunk RED**
+- **Shadowrun**
+- **Any custom homebrew system**
+
+The module **discovers available attributes at runtime** from each character's system data, rather than hardcoding specific attribute names. This means it automatically adapts to whatever game system you're using.
 
 ---
 
@@ -19,11 +32,13 @@ This module exposes a REST API that the Matrix-FoundryVTT bridge can use to inte
 1. [Installation](#installation)
 2. [Configuration](#configuration)
 3. [API Endpoints](#api-endpoints)
-4. [Module Development](#module-development)
-5. [Event System](#event-system)
-6. [Security](#security)
-7. [Testing](#testing)
-8. [License](#license)
+4. [System-Agnostic Checks](#system-agnostic-checks)
+5. [Examples for Different Game Systems](#examples-for-different-game-systems)
+6. [Module Development](#module-development)
+7. [Event System](#event-system)
+8. [Security](#security)
+9. [Testing](#testing)
+10. [License](#license)
 
 ---
 
@@ -110,96 +125,183 @@ http://localhost:30001/api/matrix-bridge
 
 All endpoints require an `Authorization: Bearer <token>` header with your API token.
 
-### Module Information
+---
+
+## System-Agnostic Checks
+
+The check endpoints are designed to work with **ANY** FoundryVTT game system. Instead of hardcoding attributes like "strength" or "dexterity", you specify the **path** to the attribute in the character's system data.
+
+### Check Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/info` | Get module information |
+| POST | `/checks/attribute` | Perform a check on ANY character attribute |
+| POST | `/checks/save` | Perform a saving throw on ANY attribute |
+| POST | `/checks/simple` | Perform a simple dice check |
+| GET | `/checks/available/:characterId` | Get all available check options for a character |
+| GET | `/checks/discover/:characterId` | Discover all attributes for a character |
+| GET | `/checks/system` | Get current game system information |
 
-**Response:**
+### How It Works
+
+1. **Attribute Path**: You specify the path to the attribute in the character's system data
+   - Example: `"attributes.stress"` (Alien RPG), `"skills.stealth"` (D&D 5e)
+   
+2. **Automatic Discovery**: The module can scan a character and return all available attributes
+   
+3. **No Hardcoded Values**: The module never assumes what attributes exist - it reads them from the character
+
+---
+
+## Examples for Different Game Systems
+
+### Alien RPG
+
+In Alien RPG, characters have attributes like:
+- `attributes.stress`
+- `attributes.composure`
+- `attributes.agility`
+
+**Attribute Check:**
+```json
+POST /api/matrix-bridge/checks/attribute
+{
+  "worldId": "world-id-123",
+  "userId": "user-id-1",
+  "characterId": "actor-id-123",
+  "attribute": "attributes.stress",
+  "dc": 12,
+  "displayName": "Stress Check"
+}
+```
+
+**Saving Throw:**
+```json
+POST /api/matrix-bridge/checks/save
+{
+  "worldId": "world-id-123",
+  "userId": "user-id-1",
+  "characterId": "actor-id-123",
+  "attribute": "attributes.composure",
+  "dc": 10
+}
+```
+
+### D&D 5e
+
+In D&D 5e, characters have:
+- Skills: `skills.stealth`, `skills.perception`, etc.
+- Abilities: `abilities.strength`, `abilities.dexterity`, etc.
+- Saves: `saves.dexterity`, `saves.constitution`, etc.
+
+**Skill Check:**
+```json
+POST /api/matrix-bridge/checks/attribute
+{
+  "worldId": "world-id-123",
+  "userId": "user-id-1",
+  "characterId": "actor-id-123",
+  "attribute": "skills.stealth",
+  "dc": 15,
+  "advantage": true
+}
+```
+
+**Ability Check:**
+```json
+POST /api/matrix-bridge/checks/attribute
+{
+  "worldId": "world-id-123",
+  "userId": "user-id-1",
+  "characterId": "actor-id-123",
+  "attribute": "abilities.dexterity",
+  "dc": 15
+}
+```
+
+**Saving Throw:**
+```json
+POST /api/matrix-bridge/checks/save
+{
+  "worldId": "world-id-123",
+  "userId": "user-id-1",
+  "characterId": "actor-id-123",
+  "attribute": "abilities.constitution",
+  "dc": 15
+}
+```
+
+### Call of Cthulhu
+
+In Call of Cthulhu, characters have:
+- Characteristics: `characteristics.str`, `characteristics.dex`, etc.
+- Skills: `skills.persuade`, `skills.sneak`, etc.
+
+**Characteristic Roll:**
+```json
+POST /api/matrix-bridge/checks/attribute
+{
+  "worldId": "world-id-123",
+  "userId": "user-id-1",
+  "characterId": "actor-id-123",
+  "attribute": "characteristics.dex",
+  "dc": 50
+}
+```
+
+**Skill Roll:**
+```json
+POST /api/matrix-bridge/checks/attribute
+{
+  "worldId": "world-id-123",
+  "userId": "user-id-1",
+  "characterId": "actor-id-123",
+  "attribute": "skills.persuade",
+  "dc": 40
+}
+```
+
+### Discovering Available Attributes
+
+You can discover all available attributes for a character:
+
+**Request:**
+```
+GET /api/matrix-bridge/checks/available/actor-id-123
+```
+
+**Response (Alien RPG example):**
 ```json
 {
   "success": true,
   "data": {
-    "id": "matrix-bridge",
-    "title": "Matrix Bridge",
-    "description": "FoundryVTT module for Matrix integration",
-    "version": "1.0.0",
-    "author": "stonehold76",
-    "compatibleCoreVersion": "11.0.0",
-    "minimumCoreVersion": "10.0.0"
-  }
-}
-```
-
-### Worlds
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/worlds` | Get all worlds |
-| GET | `/worlds/{worldId}` | Get a specific world |
-| GET | `/worlds/{worldId}/users` | Get users in a world |
-
-**Response (list worlds):**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "world-id-123",
-      "title": "D&D Campaign",
-      "system": "dnd5e",
-      "isActive": true,
-      "players": [
-        {
-          "id": "user-id-1",
-          "name": "Alice",
-          "isGM": true
-        }
+    "byCategory": {
+      "attributes": [
+        {"name": "stress", "path": "attributes.stress", "label": "Stress"},
+        {"name": "composure", "path": "attributes.composure", "label": "Composure"},
+        {"name": "agility", "path": "attributes.agility", "label": "Agility"}
       ],
-      "gmIds": ["user-id-1"]
-    }
-  ]
-}
-```
-
-### Users
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users/{userId}` | Get a specific user |
-| GET | `/users/{userId}/current-world` | Get current world for user |
-| GET | `/users/{userId}/characters` | Get characters for user |
-
-**Response (get user):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "user-id-1",
-    "name": "Alice",
-    "isGM": true,
-    "avatar": "icons/svg/mystery-man.svg",
-    "color": "#FF0000"
+      "skills": [
+        {"name": "command", "path": "skills.command", "label": "Command"},
+        {"name": "piloting", "path": "skills.piloting", "label": "Piloting"},
+        {"name": "medicalAid", "path": "skills.medicalAid", "label": "Medical Aid"}
+      ],
+      "saves": [],
+      "custom": []
+    },
+    "flatList": [
+      {"name": "stress", "path": "attributes.stress", "label": "Stress", "category": "attribute"},
+      {"name": "composure", "path": "attributes.composure", "label": "Composure", "category": "attribute"},
+      {"name": "command", "path": "skills.command", "label": "Command", "category": "skill"}
+    ],
+    "system": "alienrpg"
   }
 }
 ```
 
-### Dice Rolls
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/dice/roll` | Execute a dice roll |
-
 **Request:**
-```json
-{
-  "worldId": "world-id-123",
-  "userId": "user-id-1",
-  "expression": "1d20 + 5",
-  "whisperTo": ["user-id-2"],
-  "blind": false
-}
+```
+GET /api/matrix-bridge/checks/discover/actor-id-123
 ```
 
 **Response:**
@@ -207,250 +309,20 @@ All endpoints require an `Authorization: Bearer <token>` header with your API to
 {
   "success": true,
   "data": {
-    "id": "roll-id-123",
-    "userId": "user-id-1",
-    "worldId": "world-id-123",
-    "expression": "1d20 + 5",
-    "result": "1d20 + 5 = 15 + 5 = 20",
-    "total": 20,
-    "rolls": [[15]],
-    "whisperTo": ["user-id-2"],
-    "blind": false,
-    "timestamp": 1234567890
-  }
-}
-```
-
-### Checks
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/checks/skill` | Perform a skill check |
-| POST | `/checks/ability` | Perform an ability check |
-| POST | `/checks/save` | Perform a saving throw |
-
-**Request (skill check):**
-```json
-{
-  "worldId": "world-id-123",
-  "userId": "user-id-1",
-  "characterId": "actor-id-123",
-  "skill": "stealth",
-  "dc": 15,
-  "advantage": false,
-  "disadvantage": false
-}
-```
-
-**Response (skill check):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "check-id-123",
-    "userId": "user-id-1",
     "characterId": "actor-id-123",
-    "skill": "stealth",
-    "roll": 18,
-    "dc": 15,
-    "success": true,
-    "criticalSuccess": false,
-    "criticalFailure": false,
-    "total": 23,
-    "breakdown": "1d20 (18) + Dexterity (5) = 23",
-    "timestamp": 1234567890
-  }
-}
-```
-
-**Request (ability check):**
-```json
-{
-  "worldId": "world-id-123",
-  "userId": "user-id-1",
-  "characterId": "actor-id-123",
-  "ability": "str",
-  "dc": 15,
-  "advantage": true,
-  "disadvantage": false
-}
-```
-
-**Request (saving throw):**
-```json
-{
-  "worldId": "world-id-123",
-  "userId": "user-id-1",
-  "characterId": "actor-id-123",
-  "ability": "dex",
-  "dc": 15,
-  "advantage": false,
-  "disadvantage": false
-}
-```
-
-### Character Data
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/characters/get` | Get character data |
-
-**Request:**
-```json
-{
-  "worldId": "world-id-123",
-  "characterId": "actor-id-123",
-  "fields": ["name", "system.attributes.hp", "system.skills.stealth"]
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "actor-id-123",
-    "name": "Gandalf",
-    "system": "dnd5e",
-    "data": {
-      "name": "Gandalf",
-      "system": {
-        "attributes": {
-          "hp": {
-            "value": 45,
-            "max": 45
-          }
-        },
-        "skills": {
-          "stealth": {
-            "value": 5,
-            "mod": 5
-          }
-        }
-      }
-    },
-    "timestamp": 1234567890
-  }
-}
-```
-
-### Items/Equipment
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/items/search` | Search for items |
-
-**Request:**
-```json
-{
-  "worldId": "world-id-123",
-  "characterId": "actor-id-123",
-  "itemName": "Longsword",
-  "type": "weapon"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "item-id-123",
-      "name": "Longsword",
-      "type": "weapon",
-      "data": {
-        "description": "A sharp longsword",
-        "damage": "1d8",
-        "properties": ["versatile"]
-      },
-      "ownerId": "actor-id-123",
-      "timestamp": 1234567890
+    "characterName": "Ellen Ripley",
+    "system": "alienrpg",
+    "attributes": {
+      "attributes": [
+        {"name": "stress", "path": "attributes.stress", "label": "Stress"},
+        {"name": "composure", "path": "attributes.composure", "label": "Composure"}
+      ],
+      "skills": [
+        {"name": "command", "path": "skills.command", "label": "Command"}
+      ],
+      "saves": [],
+      "custom": []
     }
-  ]
-}
-```
-
-### Chat Messages
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/chat/send` | Send a chat message |
-
-**Request:**
-```json
-{
-  "worldId": "world-id-123",
-  "userId": "user-id-1",
-  "content": "Hello from Matrix!",
-  "formattedContent": "<p>Hello from Matrix!</p>",
-  "type": "chat",
-  "whisperTo": ["user-id-2"]
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "message-id-123",
-    "worldId": "world-id-123",
-    "userId": "user-id-1",
-    "content": "Hello from Matrix!",
-    "formattedContent": "<p>Hello from Matrix!</p>",
-    "timestamp": 1234567890
-  }
-}
-```
-
-### Events
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/events/poll` | Poll for new events |
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "type": "chatMessage",
-      "data": {
-        "id": "message-id-123",
-        "worldId": "world-id-123",
-        "userId": "user-id-1",
-        "content": "Hello from Foundry!"
-      }
-    },
-    {
-      "type": "diceRoll",
-      "data": {
-        "id": "roll-id-123",
-        "userId": "user-id-1",
-        "expression": "1d20",
-        "total": 15
-      }
-    }
-  ]
-}
-```
-
-### Custom Commands
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/commands/{command}` | Execute a custom command |
-
-**Request:**
-```json
-{
-  "worldId": "world-id-123",
-  "userId": "user-id-1",
-  "data": {
-    "action": "playSound",
-    "sound": "dnd5e.spell.fireball"
   }
 }
 ```
@@ -475,7 +347,7 @@ matrix-bridge/
 │   │   │   ├── worlds.js    # World routes
 │   │   │   ├── users.js     # User routes
 │   │   │   ├── dice.js      # Dice routes
-│   │   │   ├── checks.js    # Check routes
+│   │   │   ├── checks.js    # Check routes (SYSTEM-AGNOSTIC)
 │   │   │   ├── characters.js # Character routes
 │   │   │   ├── items.js     # Item routes
 │   │   │   ├── chat.js      # Chat routes
@@ -485,8 +357,8 @@ matrix-bridge/
 │   ├── foundry/              # Foundry integration
 │   │   ├── hooks.js         # Foundry hooks
 │   │   ├── dice.js          # Dice roller integration
-│   │   ├── checks.js        # Check integration
-│   │   └── utils.js         # Utilities
+│   │   ├── checks.js        # Check integration (SYSTEM-AGNOSTIC)
+│   │   └── chat.js          # Chat handling
 │   └── config.js            # Configuration
 ├── static/                   # Static files
 │   └── styles.css           # Module styles
@@ -494,391 +366,51 @@ matrix-bridge/
     └── en.json              # English translations
 ```
 
-### Module Manifest (module.json)
+### Key Design Principles
 
-```json
-{
-  "name": "matrix-bridge",
-  "title": "Matrix Bridge",
-  "description": "Enables integration with Matrix chat via the Matrix-FoundryVTT bridge",
-  "version": "1.0.0",
-  "author": "stonehold76",
-  "compatibleCoreVersion": "11.0.0",
-  "minimumCoreVersion": "10.0.0",
-  "url": "https://github.com/stonehold76/claude-minstral/tree/main/Mistral_FoundryVTT-matrix-widget/foundry-module",
-  "manifest": "https://raw.githubusercontent.com/stonehold76/claude-minstral/main/Mistral_FoundryVTT-matrix-widget/foundry-module/module.json",
-  "download": "https://github.com/stonehold76/claude-minstral/releases/download/v1.0.0/matrix-bridge.zip",
-  "readme": "https://raw.githubusercontent.com/stonehold76/claude-minstral/main/Mistral_FoundryVTT-matrix-widget/foundry-module/README.md",
-  "changelog": "https://raw.githubusercontent.com/stonehold76/claude-minstral/main/Mistral_FoundryVTT-matrix-widget/foundry-module/CHANGELOG.md",
-  "license": "Apache-2.0",
-  "esmodules": [
-    "src/index.js"
-  ],
-  "styles": [
-    "static/styles.css"
-  ],
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "languages/en.json"
-    }
-  ],
-  "socket": true,
-  "library": false
-}
-```
-
-### Module Entry Point (src/index.js)
-
-```javascript
-// Import FoundryVTT APIs
-import { registerModule } from './foundry/hooks.js';
-import { startApiServer } from './api/server.js';
-import { loadConfig } from './config.js';
-
-// Module metadata
-const MODULE_ID = 'matrix-bridge';
-
-// Initialize module
-Hooks.once('init', () => {
-    console.log(`[${MODULE_ID}] Initializing Matrix Bridge module...`);
-    
-    // Load configuration
-    const config = loadConfig();
-    
-    // Register Foundry hooks
-    registerModule(config);
-    
-    // Start API server if enabled
-    if (config.apiEnabled) {
-        startApiServer(config);
-    }
-    
-    console.log(`[${MODULE_ID}] Matrix Bridge module initialized`);
-});
-
-// Cleanup on close
-Hooks.once('close', () => {
-    console.log(`[${MODULE_ID}] Cleaning up Matrix Bridge module...`);
-    // Cleanup logic here
-});
-```
-
-### Foundry Hooks (src/foundry/hooks.js)
-
-```javascript
-import { MODULE_ID } from '../constants.js';
-import { handleChatMessage } from './chat.js';
-import { handleDiceRoll } from './dice.js';
-
-export function registerModule(config) {
-    // Listen for chat messages
-    Hooks.on('chatMessage', (html, content, msg) => {
-        handleChatMessage(html, content, msg, config);
-    });
-    
-    // Listen for dice rolls
-    Hooks.on('diceSoNiceRollComplete', (message, roll) => {
-        handleDiceRoll(message, roll, config);
-    });
-    
-    // Listen for user connections
-    Hooks.on('userConnected', (user) => {
-        console.log(`[${MODULE_ID}] User connected: ${user.name}`);
-    });
-    
-    // Listen for user disconnections
-    Hooks.on('userDisconnected', (user) => {
-        console.log(`[${MODULE_ID}] User disconnected: ${user.name}`);
-    });
-    
-    // Listen for world ready
-    Hooks.once('ready', () => {
-        console.log(`[${MODULE_ID}] World ready`);
-        
-        // Initialize module for this world
-        initializeWorld(config);
-    });
-}
-
-function initializeWorld(config) {
-    // Get current world
-    const world = game.world;
-    console.log(`[${MODULE_ID}] Initialized for world: ${world.title} (${world.id})`);
-    
-    // Store world info for API access
-    // ...
-}
-```
-
-### API Server (src/api/server.js)
-
-```javascript
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import { MODULE_ID } from '../constants.js';
-import { authMiddleware } from './middleware/auth.js';
-import { setupRoutes } from './routes/index.js';
-
-let server = null;
-
-export function startApiServer(config) {
-    const app = express();
-    
-    // Middleware
-    app.use(cors({
-        origin: config.corsOrigins || '*',
-    }));
-    app.use(bodyParser.json());
-    app.use(authMiddleware(config.apiToken));
-    
-    // Routes
-    setupRoutes(app);
-    
-    // Start server
-    server = app.listen(config.apiPort, () => {
-        console.log(`[${MODULE_ID}] API server listening on port ${config.apiPort}`);
-    });
-    
-    return server;
-}
-
-export function stopApiServer() {
-    if (server) {
-        server.close();
-        server = null;
-        console.log(`[${MODULE_ID}] API server stopped`);
-    }
-}
-```
-
-### Dice Roller Integration (src/foundry/dice.js)
-
-```javascript
-import { MODULE_ID } from '../constants.js';
-
-export function handleDiceRoll(message, roll, config) {
-    // Only process rolls from players (not NPCs)
-    if (!message.isRoll || !message.user) {
-        return;
-    }
-    
-    const userId = message.user.id;
-    const worldId = game.world.id;
-    const expression = message.content.match(/\/r\s+(.+)/i)?.[1] || '';
-    
-    console.log(`[${MODULE_ID}] Dice roll: ${userId} rolled ${expression}`);
-    
-    // Emit event for API to pick up
-    game.socket.emit(`module.${MODULE_ID}`, {
-        type: 'diceRoll',
-        data: {
-            userId,
-            worldId,
-            expression,
-            result: roll.total,
-            rolls: roll.rolls,
-            timestamp: Date.now(),
-        },
-    });
-}
-
-export function rollDice(expression, userId, worldId, whisperTo = [], blind = false) {
-    // Use Foundry's dice roller
-    const roll = new Roll(expression);
-    const result = roll.roll();
-    
-    // Create chat message
-    const messageData = {
-        speaker: {
-            user: userId,
-        },
-        content: `/r ${expression}`,
-        whisper: whisperTo,
-        blind: blind,
-    };
-    
-    // Send to chat
-    ChatMessage.create(messageData);
-    
-    return {
-        expression,
-        result: roll.total,
-        rolls: result.rolls,
-        userId,
-        worldId,
-        whisperTo,
-        blind,
-        timestamp: Date.now(),
-    };
-}
-```
-
-### Check Integration (src/foundry/checks.js)
-
-```javascript
-import { MODULE_ID } from '../constants.js';
-
-export function performSkillCheck(userId, characterId, skill, dc, advantage = false, disadvantage = false) {
-    const character = game.actors.get(characterId);
-    if (!character) {
-        throw new Error(`Character not found: ${characterId}`);
-    }
-    
-    const skillData = character.system.skills?.[skill];
-    if (!skillData) {
-        throw new Error(`Skill not found: ${skill}`);
-    }
-    
-    // Get the skill modifier
-    const modifier = skillData.mod || 0;
-    
-    // Roll the dice
-    const roll = new Roll(`1d20 + ${modifier}`);
-    const result = roll.roll();
-    const total = result.total;
-    
-    // Determine success
-    const success = total >= dc;
-    const criticalSuccess = total === 20;
-    const criticalFailure = total === 1;
-    
-    // Create chat message
-    const messageData = {
-        speaker: {
-            user: userId,
-            actor: characterId,
-        },
-        content: `${skill} check: ${total} (DC ${dc}) - ${success ? 'Success' : 'Failure'}`,
-    };
-    
-    ChatMessage.create(messageData);
-    
-    return {
-        userId,
-        characterId,
-        skill,
-        roll: result.total,
-        dc,
-        success,
-        criticalSuccess,
-        criticalFailure,
-        modifier,
-        total,
-        breakdown: `1d20 (${result.rolls[0][0]}) + ${modifier} = ${total}`,
-        timestamp: Date.now(),
-    };
-}
-
-export function performAbilityCheck(userId, characterId, ability, dc, advantage = false, disadvantage = false) {
-    const character = game.actors.get(characterId);
-    if (!character) {
-        throw new Error(`Character not found: ${characterId}`);
-    }
-    
-    const abilityData = character.system.abilities?.[ability];
-    if (!abilityData) {
-        throw new Error(`Ability not found: ${ability}`);
-    }
-    
-    // Get the ability modifier
-    const modifier = abilityData.mod || 0;
-    
-    // Roll the dice (with advantage/disadvantage)
-    let rollExpression = `1d20 + ${modifier}`;
-    if (advantage) {
-        rollExpression = `2d20kh1 + ${modifier}`;
-    } else if (disadvantage) {
-        rollExpression = `2d20kl1 + ${modifier}`;
-    }
-    
-    const roll = new Roll(rollExpression);
-    const result = roll.roll();
-    const total = result.total;
-    
-    // Determine success
-    const success = total >= dc;
-    const criticalSuccess = result.rolls[0].includes(20);
-    const criticalFailure = result.rolls[0].includes(1);
-    
-    // Create chat message
-    const messageData = {
-        speaker: {
-            user: userId,
-            actor: characterId,
-        },
-        content: `${ability.toUpperCase()} check: ${total} (DC ${dc}) - ${success ? 'Success' : 'Failure'}`,
-    };
-    
-    ChatMessage.create(messageData);
-    
-    return {
-        userId,
-        characterId,
-        ability,
-        roll: result.total,
-        dc,
-        success,
-        criticalSuccess,
-        criticalFailure,
-        modifier,
-        total,
-        breakdown: `${rollExpression} = ${total}`,
-        timestamp: Date.now(),
-    };
-}
-
-export function performSavingThrow(userId, characterId, ability, dc, advantage = false, disadvantage = false) {
-    // Similar to ability check but with saving throw logic
-    // ...
-}
-```
+1. **System-Agnostic**: Never hardcode attribute names. Always use paths that are discovered from the character.
+2. **Runtime Discovery**: Use the `/checks/available` and `/checks/discover` endpoints to find what's available.
+3. **Flexible Paths**: Attribute paths can be any valid path in the character's system data.
 
 ---
 
 ## Event System
 
-The module emits events that can be listened to via the Socket.IO connection or polled via the REST API.
+The module emits events that can be listened to via Server-Sent Events (SSE) or polled via REST API.
 
 ### Event Types
 
 | Event Type | Description | Data |
 |------------|-------------|------|
-| `chatMessage` | A chat message was sent | `{ id, worldId, userId, content, formattedContent, timestamp }` |
+| `chatMessage` | A chat message was sent | `{ id, worldId, userId, content, timestamp }` |
 | `diceRoll` | A dice roll was made | `{ id, userId, worldId, expression, result, rolls, timestamp }` |
-| `skillCheck` | A skill check was performed | `{ id, userId, characterId, skill, roll, dc, success, total, breakdown, timestamp }` |
-| `abilityCheck` | An ability check was performed | `{ id, userId, characterId, ability, roll, dc, success, total, breakdown, timestamp }` |
-| `savingThrow` | A saving throw was performed | `{ id, userId, characterId, ability, roll, dc, success, total, breakdown, timestamp }` |
+| `attributeCheck` | An attribute check was performed | `{ id, userId, characterId, attribute, roll, dc, success, total, timestamp }` |
+| `savingThrow` | A saving throw was performed | `{ id, userId, characterId, attribute, roll, dc, success, total, timestamp }` |
 | `userJoined` | A user joined the world | `{ userId, worldId, userName, isGM }` |
 | `userLeft` | A user left the world | `{ userId, worldId, userName }` |
-| `userTyping` | A user is typing | `{ userId, worldId, isTyping }` |
 | `worldReady` | The world is ready | `{ worldId, title, system }` |
 
-### Listening to Events
+### Event Streaming with SSE
 
 ```javascript
-// Via WebSocket (recommended)
-const socket = io('http://localhost:30001', {
-    query: { token: 'your_api_token' }
-});
+// Connect to event stream
+const eventSource = new EventSource('http://localhost:30001/api/matrix-bridge/events/stream');
 
-socket.on('connect', () => {
-    console.log('Connected to module events');
-});
+eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('Event:', data.type, data.data);
+};
 
-socket.on('chatMessage', (data) => {
-    console.log('New chat message:', data);
-});
+eventSource.onerror = (error) => {
+    console.error('Event stream error:', error);
+};
+```
 
-socket.on('diceRoll', (data) => {
-    console.log('Dice roll:', data);
-});
+### Event Polling
 
-// Via REST API polling
+```javascript
 async function pollEvents() {
-    const response = await fetch('http://localhost:30001/api/matrix-bridge/events/poll', {
+    const response = await fetch('http://localhost:30001/api/matrix-bridge/events/poll?since=1234567890', {
         headers: {
             'Authorization': 'Bearer your_api_token'
         }
@@ -940,24 +472,6 @@ npm test
 npm run test:coverage
 ```
 
-### Test Structure
-
-```
-tests/
-├── unit/
-│   ├── api/
-│   │   └── routes.test.js
-│   ├── foundry/
-│   │   ├── dice.test.js
-│   │   └── checks.test.js
-│   └── utils.test.js
-├── integration/
-│   ├── api.test.js
-│   └── foundry.test.js
-└── e2e/
-    └── full-flow.test.js
-```
-
 ---
 
 ## License
@@ -972,7 +486,6 @@ For issues or questions:
 
 - **GitHub Issues**: [stonehold76/claude-minstral](https://github.com/stonehold76/claude-minstral/issues)
 - **Matrix**: `@stonehold76:matrix.org`
-- **Discord**: (if applicable)
 
 ---
 
@@ -981,12 +494,13 @@ For issues or questions:
 ### v1.0.0
 - Initial release
 - REST API with all endpoints
+- System-agnostic check system
 - Dice roller integration
-- Skill/ability check integration
 - Character data access
 - Item search
 - Chat message sending
-- Event system
+- Event system (polling and SSE)
+- Full documentation
 
 ---
 

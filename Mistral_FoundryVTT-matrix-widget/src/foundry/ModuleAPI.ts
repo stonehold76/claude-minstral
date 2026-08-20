@@ -4,10 +4,16 @@
  * Provides REST API communication with a FoundryVTT module for tighter integration.
  * This enables features like:
  * - Full dice roller integration
- * - Skill checks and ability checks
- * - Equipment and inventory access
+ * - Generic attribute/skill checks (SYSTEM-AGNOSTIC - works with any FoundryVTT game system)
+ * - Saving throws
  * - Character sheet data
+ * - Equipment and inventory access
  * - Custom module events
+ * 
+ * SYSTEM-AGNOSTIC DESIGN:
+ * This API is designed to work with ANY FoundryVTT game system (D&D 5e, Alien RPG,
+ * Call of Cthulhu, etc.). It discovers available attributes from characters at
+ * runtime rather than hardcoding specific attributes like "strength" or "dexterity".
  */
 
 import { Logger } from '../utils/Logger';
@@ -23,6 +29,153 @@ export interface IModuleResponse<T> {
     data?: T;
     error?: string;
     code?: number;
+}
+
+/**
+ * Generic check request - works with any game system
+ */
+export interface IAttributeCheckRequest {
+    worldId: string;
+    userId: string;
+    characterId?: string; // Optional - if omitted, just rolls dice
+    attribute: string; // Path to the attribute (e.g., "attributes.agility", "skills.stealth", "characteristics.stress")
+    dc?: number; // Target number to beat
+    advantage?: boolean;
+    disadvantage?: boolean;
+    displayName?: string; // Custom display name for the check
+}
+
+/**
+ * Generic check response
+ */
+export interface IAttributeCheckResponse {
+    id: string;
+    userId: string;
+    characterId?: string | null;
+    attribute: string;
+    attributeName: string;
+    roll: number;
+    dc?: number | null;
+    success?: boolean;
+    criticalSuccess?: boolean;
+    criticalFailure?: boolean;
+    modifier: number;
+    total: number;
+    breakdown: string;
+    timestamp: number;
+}
+
+/**
+ * Saving throw request - works with any game system
+ */
+export interface ISavingThrowRequest {
+    worldId: string;
+    userId: string;
+    characterId?: string;
+    attribute: string; // Path to the save attribute
+    dc: number; // Required - target number
+    advantage?: boolean;
+    disadvantage?: boolean;
+}
+
+/**
+ * Saving throw response
+ */
+export interface ISavingThrowResponse {
+    id: string;
+    userId: string;
+    characterId?: string | null;
+    attribute: string;
+    attributeName: string;
+    roll: number;
+    dc: number;
+    success: boolean;
+    criticalSuccess?: boolean;
+    criticalFailure?: boolean;
+    modifier: number;
+    total: number;
+    breakdown: string;
+    timestamp: number;
+}
+
+/**
+ * Simple dice check request
+ */
+export interface ISimpleCheckRequest {
+    worldId: string;
+    userId: string;
+    characterId?: string;
+    expression: string; // Dice expression (e.g., "1d20 + 5")
+    dc?: number;
+    displayName?: string;
+}
+
+/**
+ * Simple check response
+ */
+export interface ISimpleCheckResponse {
+    id: string;
+    userId: string;
+    characterId?: string | null;
+    expression: string;
+    roll: number;
+    dc?: number | null;
+    success?: boolean;
+    criticalSuccess?: boolean;
+    criticalFailure?: boolean;
+    total: number;
+    breakdown: string;
+    timestamp: number;
+}
+
+/**
+ * Character data request
+ */
+export interface ICharacterDataRequest {
+    worldId: string;
+    characterId: string;
+    fields?: string[]; // Specific fields to retrieve (optional)
+}
+
+/**
+ * Character data response
+ */
+export interface ICharacterDataResponse {
+    id: string;
+    name: string;
+    type: string;
+    system: string;
+    data: Record<string, any>;
+    timestamp: number;
+}
+
+/**
+ * Available checks for a character
+ */
+export interface IAvailableChecks {
+    byCategory: {
+        attributes: Array<{ name: string; path: string; label: string }>;
+        skills: Array<{ name: string; path: string; label: string }>;
+        saves: Array<{ name: string; path: string; label: string }>;
+        custom: Array<{ name: string; path: string; label: string }>;
+    };
+    flatList: Array<{ name: string; path: string; label: string; category: string }>;
+    system: string;
+}
+
+/**
+ * Discover attributes response
+ */
+export interface IDiscoverAttributesResponse {
+    characterId: string;
+    characterName: string;
+    system: string;
+    attributes: {
+        attributes: Array<{ name: string; path: string; label: string }>;
+        skills: Array<{ name: string; path: string; label: string }>;
+        saves: Array<{ name: string; path: string; label: string }>;
+        custom: Array<{ name: string; path: string; label: string }>;
+    };
 }
 
 /**
@@ -53,163 +206,13 @@ export interface IDiceRollResponse {
 }
 
 /**
- * Skill check request
+ * Character attribute info
  */
-export interface ISkillCheckRequest {
-    worldId: string;
-    userId: string;
-    characterId?: string;
-    skill: string;
-    dc?: number;
-    advantage?: boolean;
-    disadvantage?: boolean;
-}
-
-/**
- * Skill check response
- */
-export interface ISkillCheckResponse {
-    id: string;
-    userId: string;
-    characterId?: string;
-    skill: string;
-    roll: number;
-    dc?: number;
-    success: boolean;
-    criticalSuccess?: boolean;
-    criticalFailure?: boolean;
-    total: number;
-    breakdown: string;
-    timestamp: number;
-}
-
-/**
- * Ability check request
- */
-export interface IAbilityCheckRequest {
-    worldId: string;
-    userId: string;
-    characterId?: string;
-    ability: string;
-    dc?: number;
-    advantage?: boolean;
-    disadvantage?: boolean;
-}
-
-/**
- * Ability check response
- */
-export interface IAbilityCheckResponse {
-    id: string;
-    userId: string;
-    characterId?: string;
-    ability: string;
-    roll: number;
-    dc?: number;
-    success: boolean;
-    criticalSuccess?: boolean;
-    criticalFailure?: boolean;
-    modifier: number;
-    total: number;
-    breakdown: string;
-    timestamp: number;
-}
-
-/**
- * Saving throw request
- */
-export interface ISavingThrowRequest {
-    worldId: string;
-    userId: string;
-    characterId?: string;
-    ability: string;
-    dc: number;
-    advantage?: boolean;
-    disadvantage?: boolean;
-}
-
-/**
- * Saving throw response
- */
-export interface ISavingThrowResponse {
-    id: string;
-    userId: string;
-    characterId?: string;
-    ability: string;
-    roll: number;
-    dc: number;
-    success: boolean;
-    modifier: number;
-    total: number;
-    breakdown: string;
-    timestamp: number;
-}
-
-/**
- * Character data request
- */
-export interface ICharacterDataRequest {
-    worldId: string;
-    characterId: string;
-    fields?: string[]; // Specific fields to retrieve
-}
-
-/**
- * Character data response
- */
-export interface ICharacterDataResponse {
-    id: string;
-    name: string;
-    system: string;
-    data: Record<string, any>;
-    timestamp: number;
-}
-
-/**
- * Equipment/Item request
- */
-export interface IItemRequest {
-    worldId: string;
-    characterId?: string; // If null, search all items in world
-    itemId?: string; // Specific item ID
-    itemName?: string; // Search by name
-    type?: string; // Filter by item type
-}
-
-/**
- * Item data response
- */
-export interface IItemDataResponse {
+export interface ICharacterAttributeInfo {
     id: string;
     name: string;
     type: string;
-    data: Record<string, any>;
-    ownerId?: string;
-    timestamp: number;
-}
-
-/**
- * Chat message request (to send to Foundry)
- */
-export interface IChatMessageRequest {
-    worldId: string;
-    userId: string;
-    content: string;
-    formattedContent?: string;
-    type?: 'chat' | 'whisper' | 'emote' | 'oob';
-    whisperTo?: string[];
-}
-
-/**
- * Chat message response
- */
-export interface IChatMessageResponse {
-    id: string;
-    worldId: string;
-    userId: string;
-    content: string;
-    formattedContent?: string;
-    timestamp: number;
+    system: string;
 }
 
 /**
@@ -223,6 +226,16 @@ export interface IModuleInfo {
     author: string;
     compatibleCoreVersion: string;
     minimumCoreVersion: string;
+    features: {
+        apiEnabled: boolean;
+        diceRoller: boolean;
+        attributeChecks: boolean;
+        savingThrows: boolean;
+        characterData: boolean;
+        itemSearch: boolean;
+        chatMessages: boolean;
+        events: boolean;
+    };
 }
 
 /**
@@ -249,11 +262,22 @@ export interface IModuleUserInfo {
 }
 
 /**
+ * System information
+ */
+export interface ISystemInfo {
+    systemId: string;
+    systemTitle: string;
+    systemVersion: string;
+    worldId: string;
+    worldTitle: string;
+}
+
+/**
  * ModuleAPI class
  * 
  * Communicates with a FoundryVTT module via REST API for:
  * - Dice rolls with full Foundry dice roller
- * - Skill checks and ability checks
+ * - Generic attribute checks (works with ANY game system)
  * - Saving throws
  * - Character sheet data
  * - Equipment and items
@@ -276,6 +300,9 @@ export class ModuleAPI extends EventEmitter {
     
     // User cache
     private users: Map<string, IModuleUserInfo> = new Map();
+    
+    // Current system info
+    private currentSystem: ISystemInfo | null = null;
     
     /**
      * Creates a new ModuleAPI instance
@@ -318,6 +345,13 @@ export class ModuleAPI extends EventEmitter {
             for (const world of worlds) {
                 this.worlds.set(world.id, world);
                 this.logger.debug(`Loaded world: ${world.title} (${world.id})`);
+            }
+            
+            // Get current system
+            const systemInfo = await this.getCurrentSystem();
+            if (systemInfo) {
+                this.currentSystem = systemInfo;
+                this.logger.info(`Current system: ${systemInfo.systemTitle} (${systemInfo.systemId})`);
             }
             
             this.isConnected = true;
@@ -473,6 +507,19 @@ export class ModuleAPI extends EventEmitter {
     }
     
     /**
+     * Gets the current game system information
+     */
+    public async getCurrentSystem(): Promise<ISystemInfo | null> {
+        try {
+            const response = await this.makeRequest<ISystemInfo>('/checks/system');
+            return response.data || null;
+        } catch (error) {
+            this.logger.error('Failed to get current system:', error as Error);
+            return null;
+        }
+    }
+    
+    /**
      * Executes a dice roll in Foundry
      * 
      * @param request - The dice roll request
@@ -509,63 +556,36 @@ export class ModuleAPI extends EventEmitter {
     }
     
     /**
-     * Executes a skill check in Foundry
+     * Executes an attribute check (SYSTEM-AGNOSTIC)
+     * Works with ANY FoundryVTT game system
      * 
-     * @param request - The skill check request
+     * @param request - The attribute check request
      */
-    public async checkSkill(request: ISkillCheckRequest): Promise<ISkillCheckResponse | null> {
+    public async checkAttribute(request: IAttributeCheckRequest): Promise<IAttributeCheckResponse | null> {
         try {
-            const response = await this.makeRequest<ISkillCheckResponse>('/checks/skill', 'POST', request);
+            const response = await this.makeRequest<IAttributeCheckResponse>('/checks/attribute', 'POST', request);
             const result = response.data;
             
             if (result) {
-                this.logger.info(`Skill check: ${request.skill} = ${result.roll} (${result.success ? 'success' : 'failure'})`);
+                this.logger.info(`Attribute check: ${request.attribute} = ${result.roll}`);
                 
-                // Emit skill check event
-                this.emit('skillCheck', {
-                    worldId: result.userId,
-                    skill: result.skill,
+                // Emit check event
+                this.emit('attributeCheck', {
+                    worldId: request.worldId,
+                    attribute: request.attribute,
                     result,
                 });
             }
             
             return result || null;
         } catch (error) {
-            this.logger.error('Failed to check skill:', error as Error);
+            this.logger.error('Failed to check attribute:', error as Error);
             return null;
         }
     }
     
     /**
-     * Executes an ability check in Foundry
-     * 
-     * @param request - The ability check request
-     */
-    public async checkAbility(request: IAbilityCheckRequest): Promise<IAbilityCheckResponse | null> {
-        try {
-            const response = await this.makeRequest<IAbilityCheckResponse>('/checks/ability', 'POST', request);
-            const result = response.data;
-            
-            if (result) {
-                this.logger.info(`Ability check: ${request.ability} = ${result.roll} (${result.success ? 'success' : 'failure'})`);
-                
-                // Emit ability check event
-                this.emit('abilityCheck', {
-                    worldId: result.userId,
-                    ability: result.ability,
-                    result,
-                });
-            }
-            
-            return result || null;
-        } catch (error) {
-            this.logger.error('Failed to check ability:', error as Error);
-            return null;
-        }
-    }
-    
-    /**
-     * Executes a saving throw in Foundry
+     * Executes a saving throw (SYSTEM-AGNOSTIC)
      * 
      * @param request - The saving throw request
      */
@@ -575,13 +595,13 @@ export class ModuleAPI extends EventEmitter {
             const result = response.data;
             
             if (result) {
-                this.logger.info(`Saving throw: ${request.ability} vs DC ${request.dc} = ${result.roll} (${result.success ? 'saved' : 'failed'})`);
+                this.logger.info(`Saving throw: ${request.attribute} vs DC ${request.dc} = ${result.roll} (${result.success ? 'saved' : 'failed'})`);
                 
                 // Emit saving throw event
                 this.emit('savingThrow', {
-                    worldId: result.userId,
-                    ability: result.ability,
-                    dc: result.dc,
+                    worldId: request.worldId,
+                    attribute: request.attribute,
+                    dc: request.dc,
                     result,
                 });
             }
@@ -589,6 +609,59 @@ export class ModuleAPI extends EventEmitter {
             return result || null;
         } catch (error) {
             this.logger.error('Failed to save throw:', error as Error);
+            return null;
+        }
+    }
+    
+    /**
+     * Executes a simple dice check
+     * 
+     * @param request - The simple check request
+     */
+    public async simpleCheck(request: ISimpleCheckRequest): Promise<ISimpleCheckResponse | null> {
+        try {
+            const response = await this.makeRequest<ISimpleCheckResponse>('/checks/simple', 'POST', request);
+            const result = response.data;
+            
+            if (result) {
+                this.logger.info(`Simple check: ${request.expression} = ${result.roll}`);
+            }
+            
+            return result || null;
+        } catch (error) {
+            this.logger.error('Failed to perform simple check:', error as Error);
+            return null;
+        }
+    }
+    
+    /**
+     * Gets available checks for a character
+     * This discovers what attributes/skills/saves are available for checking
+     * based on the character's game system
+     * 
+     * @param characterId - The character ID
+     */
+    public async getAvailableChecks(characterId: string): Promise<IAvailableChecks | null> {
+        try {
+            const response = await this.makeRequest<IAvailableChecks>(`/checks/available/${characterId}`);
+            return response.data || null;
+        } catch (error) {
+            this.logger.error(`Failed to get available checks for character ${characterId}:`, error as Error);
+            return null;
+        }
+    }
+    
+    /**
+     * Discovers all attributes for a character
+     * 
+     * @param characterId - The character ID
+     */
+    public async discoverCharacterAttributes(characterId: string): Promise<IDiscoverAttributesResponse | null> {
+        try {
+            const response = await this.makeRequest<IDiscoverAttributesResponse>(`/checks/discover/${characterId}`);
+            return response.data || null;
+        } catch (error) {
+            this.logger.error(`Failed to discover attributes for character ${characterId}:`, error as Error);
             return null;
         }
     }
@@ -609,16 +682,31 @@ export class ModuleAPI extends EventEmitter {
     }
     
     /**
-     * Gets item data
+     * Gets all characters in a world
      * 
-     * @param request - The item request
+     * @param worldId - The world ID
      */
-    public async getItem(request: IItemRequest): Promise<IItemDataResponse[] | null> {
+    public async getAllCharacters(worldId: string): Promise<ICharacterAttributeInfo[]> {
         try {
-            const response = await this.makeRequest<IItemDataResponse[]>('/items/search', 'POST', request);
+            const response = await this.makeRequest<ICharacterAttributeInfo[]>(`/characters?worldId=${worldId}`);
+            return response.data || [];
+        } catch (error) {
+            this.logger.error(`Failed to get characters for world ${worldId}:`, error as Error);
+            return [];
+        }
+    }
+    
+    /**
+     * Gets a specific character
+     * 
+     * @param characterId - The character ID
+     */
+    public async getCharacterById(characterId: string): Promise<ICharacterAttributeInfo | null> {
+        try {
+            const response = await this.makeRequest<ICharacterAttributeInfo>(`/characters/${characterId}`);
             return response.data || null;
         } catch (error) {
-            this.logger.error('Failed to get item data:', error as Error);
+            this.logger.error(`Failed to get character ${characterId}:`, error as Error);
             return null;
         }
     }
@@ -659,76 +747,17 @@ export class ModuleAPI extends EventEmitter {
     }
     
     /**
-     * Subscribes to module events via WebSocket or Server-Sent Events
-     * 
-     * @param callback - Callback for events
+     * Gets the current system ID
      */
-    public async subscribeToEvents(callback: (event: string, data: any) => void): Promise<void> {
-        // In a real implementation, this would establish a WebSocket or SSE connection
-        // For now, just log and use polling
-        this.logger.info('Event subscription not yet implemented (use polling for now)');
+    public getCurrentSystemId(): string | null {
+        return this.currentSystem?.systemId || null;
     }
     
     /**
-     * Polls for new events from the module
+     * Gets the current system title
      */
-    public async pollEvents(): Promise<void> {
-        try {
-            const response = await this.makeRequest<any[]>('/events/poll');
-            const events = response.data || [];
-            
-            for (const event of events) {
-                this.emit(event.type, event.data);
-            }
-        } catch (error) {
-            this.logger.error('Failed to poll events:', error as Error);
-        }
-    }
-    
-    /**
-     * Gets the current world ID for a user
-     * 
-     * @param userId - The user ID
-     */
-    public async getCurrentWorld(userId: string): Promise<string | null> {
-        try {
-            const response = await this.makeRequest<{ worldId: string }>(`/users/${userId}/current-world`);
-            return response.data?.worldId || null;
-        } catch (error) {
-            this.logger.error(`Failed to get current world for user ${userId}:`, error as Error);
-            return null;
-        }
-    }
-    
-    /**
-     * Gets the list of characters for a user
-     * 
-     * @param userId - The user ID
-     */
-    public async getCharacters(userId: string): Promise<ICharacterDataResponse[] | null> {
-        try {
-            const response = await this.makeRequest<ICharacterDataResponse[]>(`/users/${userId}/characters`);
-            return response.data || null;
-        } catch (error) {
-            this.logger.error(`Failed to get characters for user ${userId}:`, error as Error);
-            return null;
-        }
-    }
-    
-    /**
-     * Executes a custom module command
-     * 
-     * @param command - The command name
-     * @param data - Command data
-     */
-    public async executeCommand(command: string, data: any = {}): Promise<any | null> {
-        try {
-            const response = await this.makeRequest<any>(`/commands/${command}`, 'POST', data);
-            return response.data || null;
-        } catch (error) {
-            this.logger.error(`Failed to execute command ${command}:`, error as Error);
-            return null;
-        }
+    public getCurrentSystemTitle(): string | null {
+        return this.currentSystem?.systemTitle || null;
     }
     
     /**
@@ -789,6 +818,7 @@ export class ModuleAPI extends EventEmitter {
             userCount: this.users.size,
             baseUrl: this.baseUrl,
             hasApiToken: !!this.apiToken,
+            currentSystem: this.currentSystem,
         };
     }
 }
