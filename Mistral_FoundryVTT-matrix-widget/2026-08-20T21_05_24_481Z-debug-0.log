@@ -1,0 +1,78 @@
+0 verbose cli /root/.nvm/versions/node/v22.23.2/bin/node /root/.nvm/versions/node/v22.23.2/bin/npm
+1 info using npm@10.9.8
+2 info using node@v22.23.2
+3 silly config load:file:/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/npmrc
+4 silly config load:file:/opt/claude-minstral/Mistral_FoundryVTT-matrix-widget/.npmrc
+5 silly config load:file:/root/.npmrc
+6 silly config load:file:/root/.nvm/versions/node/v22.23.2/etc/npmrc
+7 verbose title npm install
+8 verbose argv "install"
+9 verbose logfile logs-max:10 dir:/root/.npm/_logs/2026-08-20T21_05_24_481Z-
+10 verbose logfile /root/.npm/_logs/2026-08-20T21_05_24_481Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly logfile done cleaning log files
+13 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+14 silly idealTree buildDeps
+15 silly fetch manifest typescript@>=4.8.4 <6.1.0
+16 silly packumentCache full:https://registry.npmjs.org/typescript cache-miss
+17 http cache https://registry.npmjs.org/typescript 195ms (cache hit)
+18 silly packumentCache full:https://registry.npmjs.org/typescript set size:15572560 disposed:false
+19 verbose stack Error: could not resolve
+19 verbose stack     at PlaceDep.failPeerConflict (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:503:25)
+19 verbose stack     at new PlaceDep (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:157:21)
+19 verbose stack     at #buildDepStep (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:920:18)
+19 verbose stack     at async Arborist.buildIdealTree (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:181:7)
+19 verbose stack     at async Promise.all (index 1)
+19 verbose stack     at async Arborist.reify (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:133:5)
+19 verbose stack     at async Install.exec (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/lib/commands/install.js:150:5)
+19 verbose stack     at async Npm.exec (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/lib/npm.js:207:9)
+19 verbose stack     at async module.exports (/root/.nvm/versions/node/v22.23.2/lib/node_modules/npm/lib/cli/entry.js:74:5)
+20 error code ERESOLVE
+21 error ERESOLVE could not resolve
+22 error
+23 error While resolving: @typescript-eslint/eslint-plugin@8.67.0
+23 error Found: typescript@7.0.2[2m[22m
+23 error [2mnode_modules/typescript[22m
+23 error   [34mdev[39m typescript@"^7.0.2" from the root project
+23 error   [95mpeer[39m typescript@">=4.8.4" from ts-api-utils@2.5.0[2m[22m
+23 error   [2mnode_modules/ts-api-utils[22m
+23 error     ts-api-utils@"^2.5.0" from @typescript-eslint/eslint-plugin@8.67.0[2m[22m
+23 error     [2mnode_modules/@typescript-eslint/eslint-plugin[22m
+23 error       [34mdev[39m @typescript-eslint/eslint-plugin@"^8.67.0" from the root project
+23 error     ts-api-utils@"^2.5.0" from @typescript-eslint/type-utils@8.67.0[2m[22m
+23 error     [2mnode_modules/@typescript-eslint/eslint-plugin/node_modules/@typescript-eslint/type-utils[22m
+23 error       @typescript-eslint/type-utils@"8.67.0" from @typescript-eslint/eslint-plugin@8.67.0[2m[22m
+23 error       [2mnode_modules/@typescript-eslint/eslint-plugin[22m
+23 error         [34mdev[39m @typescript-eslint/eslint-plugin@"^8.67.0" from the root project
+23 error     3 more (@typescript-eslint/typescript-estree, ...)
+23 error   2 more (ts-node, ts-node-dev)
+23 error
+23 error Could not resolve dependency:
+23 error [95mpeer[39m typescript@">=4.8.4 <6.1.0" from @typescript-eslint/eslint-plugin@8.67.0[2m[22m
+23 error [2mnode_modules/@typescript-eslint/eslint-plugin[22m
+23 error   [34mdev[39m @typescript-eslint/eslint-plugin@"^8.67.0" from the root project
+23 error
+23 error Conflicting peer dependency: typescript@6.0.3[2m[22m
+23 error [2mnode_modules/typescript[22m
+23 error   [95mpeer[39m typescript@">=4.8.4 <6.1.0" from @typescript-eslint/eslint-plugin@8.67.0[2m[22m
+23 error   [2mnode_modules/@typescript-eslint/eslint-plugin[22m
+23 error     [34mdev[39m @typescript-eslint/eslint-plugin@"^8.67.0" from the root project
+23 error
+23 error Fix the upstream dependency conflict, or retry
+23 error this command with --force or --legacy-peer-deps
+23 error to accept an incorrect (and potentially broken) dependency resolution.
+24 error
+24 error
+24 error For a full report see:
+24 error /root/.npm/_logs/2026-08-20T21_05_24_481Z-eresolve-report.txt
+25 silly unfinished npm timer reify 1787259924766
+26 silly unfinished npm timer reify:loadTrees 1787259924769
+27 silly unfinished npm timer idealTree:buildDeps 1787259925038
+28 silly unfinished npm timer idealTree:node_modules/@typescript-eslint/eslint-plugin 1787259925040
+29 verbose cwd /opt/claude-minstral/Mistral_FoundryVTT-matrix-widget
+30 verbose os Linux 6.12.96+deb13-amd64
+31 verbose node v22.23.2
+32 verbose npm  v10.9.8
+33 verbose exit 1
+34 verbose code 1
+35 error A complete log of this run can be found in: /root/.npm/_logs/2026-08-20T21_05_24_481Z-debug-0.log

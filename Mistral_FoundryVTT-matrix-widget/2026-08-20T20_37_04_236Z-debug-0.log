@@ -1,0 +1,140 @@
+0 verbose cli /root/.nvm/versions/node/v18.20.8/bin/node /root/.nvm/versions/node/v18.20.8/bin/npm
+1 info using npm@10.8.2
+2 info using node@v18.20.8
+3 silly config load:file:/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/npmrc
+4 silly config load:file:/opt/claude-minstral/Mistral_FoundryVTT-matrix-widget/.npmrc
+5 silly config load:file:/root/.npmrc
+6 silly config load:file:/root/.nvm/versions/node/v18.20.8/etc/npmrc
+7 verbose title npm install
+8 verbose argv "install"
+9 verbose logfile logs-max:10 dir:/root/.npm/_logs/2026-08-20T20_37_04_236Z-
+10 verbose logfile /root/.npm/_logs/2026-08-20T20_37_04_236Z-debug-0.log
+11 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+12 silly logfile start cleaning logs, removing 1 files
+13 silly logfile done cleaning log files
+14 silly idealTree buildDeps
+15 silly fetch manifest @eslint/config-array@^0.21.2
+16 silly packumentCache full:https://registry.npmjs.org/@eslint%2fconfig-array cache-miss
+17 http fetch GET 200 https://registry.npmjs.org/@eslint%2fconfig-array 166ms (cache miss)
+18 silly packumentCache full:https://registry.npmjs.org/@eslint%2fconfig-array set size:undefined disposed:false
+19 silly fetch manifest @eslint/object-schema@^2.1.7
+20 silly packumentCache full:https://registry.npmjs.org/@eslint%2fobject-schema cache-miss
+21 http fetch GET 200 https://registry.npmjs.org/@eslint%2fobject-schema 65ms (cache miss)
+22 silly packumentCache full:https://registry.npmjs.org/@eslint%2fobject-schema set size:undefined disposed:false
+23 silly fetch manifest express@^4.18.2
+24 silly packumentCache full:https://registry.npmjs.org/express cache-miss
+25 http fetch GET 200 https://registry.npmjs.org/express 69ms (cache miss)
+26 silly packumentCache full:https://registry.npmjs.org/express set size:undefined disposed:false
+27 silly fetch manifest glob@^13.0.6
+28 silly packumentCache full:https://registry.npmjs.org/glob cache-miss
+29 http fetch GET 200 https://registry.npmjs.org/glob 39ms (cache miss)
+30 silly packumentCache full:https://registry.npmjs.org/glob set size:undefined disposed:false
+31 silly fetch manifest js-yaml@^4.1.0
+32 silly packumentCache full:https://registry.npmjs.org/js-yaml cache-miss
+33 http fetch GET 200 https://registry.npmjs.org/js-yaml 31ms (cache miss)
+34 silly packumentCache full:https://registry.npmjs.org/js-yaml set size:undefined disposed:false
+35 silly fetch manifest matrix-js-sdk@^42.2.0
+36 silly packumentCache full:https://registry.npmjs.org/matrix-js-sdk cache-miss
+37 http fetch GET 200 https://registry.npmjs.org/matrix-js-sdk 188ms (cache miss)
+38 silly packumentCache full:https://registry.npmjs.org/matrix-js-sdk set size:undefined disposed:false
+39 silly fetch manifest minimatch@^10.2.6
+40 silly packumentCache full:https://registry.npmjs.org/minimatch cache-miss
+41 http fetch GET 200 https://registry.npmjs.org/minimatch 41ms (cache miss)
+42 silly packumentCache full:https://registry.npmjs.org/minimatch set size:undefined disposed:false
+43 silly fetch manifest rimraf@^6.1.3
+44 silly packumentCache full:https://registry.npmjs.org/rimraf cache-miss
+45 http fetch GET 200 https://registry.npmjs.org/rimraf 37ms (cache miss)
+46 silly packumentCache full:https://registry.npmjs.org/rimraf set size:undefined disposed:false
+47 silly fetch manifest socket.io-client@^4.7.2
+48 silly packumentCache full:https://registry.npmjs.org/socket.io-client cache-miss
+49 http fetch GET 200 https://registry.npmjs.org/socket.io-client 38ms (cache miss)
+50 silly packumentCache full:https://registry.npmjs.org/socket.io-client set size:undefined disposed:false
+51 silly fetch manifest uuid@^14.0.2
+52 silly packumentCache full:https://registry.npmjs.org/uuid cache-miss
+53 http fetch GET 200 https://registry.npmjs.org/uuid 41ms (cache miss)
+54 silly packumentCache full:https://registry.npmjs.org/uuid set size:undefined disposed:false
+55 silly fetch manifest winston@^3.11.0
+56 silly packumentCache full:https://registry.npmjs.org/winston cache-miss
+57 http fetch GET 200 https://registry.npmjs.org/winston 37ms (cache miss)
+58 silly packumentCache full:https://registry.npmjs.org/winston set size:undefined disposed:false
+59 silly fetch manifest @types/express@^4.17.21
+60 silly packumentCache full:https://registry.npmjs.org/@types%2fexpress cache-miss
+61 http fetch GET 200 https://registry.npmjs.org/@types%2fexpress 46ms (cache miss)
+62 silly packumentCache full:https://registry.npmjs.org/@types%2fexpress set size:undefined disposed:false
+63 silly fetch manifest @types/js-yaml@^4.0.9
+64 silly packumentCache full:https://registry.npmjs.org/@types%2fjs-yaml cache-miss
+65 http fetch GET 200 https://registry.npmjs.org/@types%2fjs-yaml 39ms (cache miss)
+66 silly packumentCache full:https://registry.npmjs.org/@types%2fjs-yaml set size:undefined disposed:false
+67 silly fetch manifest @types/node@^20.10.6
+68 silly packumentCache full:https://registry.npmjs.org/@types%2fnode cache-miss
+69 http fetch GET 200 https://registry.npmjs.org/@types%2fnode 251ms (cache miss)
+70 silly packumentCache full:https://registry.npmjs.org/@types%2fnode set size:undefined disposed:false
+71 silly fetch manifest @types/socket.io-client@^1.4.36
+72 silly packumentCache full:https://registry.npmjs.org/@types%2fsocket.io-client cache-miss
+73 http fetch GET 200 https://registry.npmjs.org/@types%2fsocket.io-client 182ms (cache miss)
+74 silly packumentCache full:https://registry.npmjs.org/@types%2fsocket.io-client set size:undefined disposed:false
+75 silly fetch manifest @typescript-eslint/eslint-plugin@^6.17.0
+76 silly packumentCache full:https://registry.npmjs.org/@typescript-eslint%2feslint-plugin cache-miss
+77 http fetch GET 200 https://registry.npmjs.org/@typescript-eslint%2feslint-plugin 494ms (cache miss)
+78 silly packumentCache full:https://registry.npmjs.org/@typescript-eslint%2feslint-plugin set size:undefined disposed:false
+79 silly fetch manifest @typescript-eslint/parser@^6.17.0
+80 silly packumentCache full:https://registry.npmjs.org/@typescript-eslint%2fparser cache-miss
+81 http fetch GET 200 https://registry.npmjs.org/@typescript-eslint%2fparser 387ms (cache miss)
+82 silly packumentCache full:https://registry.npmjs.org/@typescript-eslint%2fparser set size:undefined disposed:false
+83 silly fetch manifest eslint@^10.8.1
+84 silly packumentCache full:https://registry.npmjs.org/eslint cache-miss
+85 http fetch GET 200 https://registry.npmjs.org/eslint 75ms (cache miss)
+86 silly packumentCache full:https://registry.npmjs.org/eslint set size:undefined disposed:false
+87 silly fetch manifest eslint@^7.0.0 || ^8.0.0
+88 silly packumentCache full:https://registry.npmjs.org/eslint cache-miss
+89 http fetch GET 200 https://registry.npmjs.org/eslint 13ms (cache hit)
+90 silly packumentCache full:https://registry.npmjs.org/eslint set size:2054976 disposed:false
+91 silly fetch manifest jiti@*
+92 silly packumentCache full:https://registry.npmjs.org/jiti cache-miss
+93 http fetch GET 200 https://registry.npmjs.org/jiti 40ms (cache miss)
+94 silly packumentCache full:https://registry.npmjs.org/jiti set size:undefined disposed:false
+95 verbose stack Error: unable to resolve dependency tree
+95 verbose stack     at #failPeerConflict (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:1360:25)
+95 verbose stack     at #loadPeerSet (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:1326:33)
+95 verbose stack     at async #loadPeerSet (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:1305:23)
+95 verbose stack     at async #buildDepStep (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:901:11)
+95 verbose stack     at async Arborist.buildIdealTree (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:181:7)
+95 verbose stack     at async Promise.all (index 1)
+95 verbose stack     at async Arborist.reify (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:131:5)
+95 verbose stack     at async Install.exec (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/lib/commands/install.js:150:5)
+95 verbose stack     at async Npm.exec (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/lib/npm.js:207:9)
+95 verbose stack     at async module.exports (/root/.nvm/versions/node/v18.20.8/lib/node_modules/npm/lib/cli/entry.js:74:5)
+96 error code ERESOLVE
+97 error ERESOLVE unable to resolve dependency tree
+98 error
+99 error While resolving: matrix-foundryvtt-bridge@1.0.0
+99 error Found: eslint@10.8.1[2m[22m
+99 error [2mnode_modules/eslint[22m
+99 error   [34mdev[39m eslint@"^10.8.1" from the root project
+99 error
+99 error Could not resolve dependency:
+99 error [95mpeer[39m eslint@"^7.0.0 || ^8.0.0" from @typescript-eslint/parser@6.21.0[2m[22m
+99 error [2mnode_modules/@typescript-eslint/parser[22m
+99 error   [34mdev[39m @typescript-eslint/parser@"^6.17.0" from the root project
+99 error   [95mpeer[39m @typescript-eslint/parser@"^6.0.0 || ^6.0.0-alpha" from @typescript-eslint/eslint-plugin@6.21.0[2m[22m
+99 error   [2mnode_modules/@typescript-eslint/eslint-plugin[22m
+99 error     [34mdev[39m @typescript-eslint/eslint-plugin@"^6.17.0" from the root project
+99 error
+99 error Fix the upstream dependency conflict, or retry
+99 error this command with --force or --legacy-peer-deps
+99 error to accept an incorrect (and potentially broken) dependency resolution.
+100 error
+100 error
+100 error For a full report see:
+100 error /root/.npm/_logs/2026-08-20T20_37_04_236Z-eresolve-report.txt
+101 silly unfinished npm timer reify 1787258224646
+102 silly unfinished npm timer reify:loadTrees 1787258224652
+103 silly unfinished npm timer idealTree:buildDeps 1787258224671
+104 silly unfinished npm timer idealTree:#root 1787258224672
+105 verbose cwd /opt/claude-minstral/Mistral_FoundryVTT-matrix-widget
+106 verbose os Linux 6.12.96+deb13-amd64
+107 verbose node v18.20.8
+108 verbose npm  v10.8.2
+109 verbose exit 1
+110 verbose code 1
+111 error A complete log of this run can be found in: /root/.npm/_logs/2026-08-20T20_37_04_236Z-debug-0.log
