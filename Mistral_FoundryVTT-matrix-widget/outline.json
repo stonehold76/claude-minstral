@@ -1,0 +1,709 @@
+{
+  "project": {
+    "name": "Matrix-FoundryVTT Bridge",
+    "description": "Bidirectional bridge between Matrix homeserver and FoundryVTT for chat, dice rolls, and game state synchronization",
+    "version": "1.0.0-outline",
+    "license": "Apache-2.0",
+    "repository": "Mistral_FoundryVTT-matrix-widget"
+  },
+  "overview": {
+    "purpose": "Enable Matrix users to interact with FoundryVTT game sessions through their Matrix clients",
+    "target_users": [
+      "FoundryVTT Game Masters",
+      "FoundryVTT Players",
+      "Matrix community members",
+      "Remote gaming groups"
+    ],
+    "key_features": [
+      "Bidirectional chat messaging",
+      "Dice roll execution and results sharing",
+      "User presence synchronization",
+      "File/attachment bridging",
+      "Whisper/DM support",
+      "Typing indicators",
+      "Read receipts (optional)",
+      "Reaction support",
+      "Custom command handling"
+    ]
+  },
+  "architecture": {
+    "design": "Application Service Pattern",
+    "components": {
+      "matrix_integration": {
+        "type": "Application Service",
+        "description": "Connects to Matrix homeserver via App Service API",
+        "library": "matrix-js-sdk",
+        "capabilities": [
+          "Message sending/receiving",
+          "Room management",
+          "User profile management",
+          "Event processing"
+        ]
+      },
+      "foundry_integration": {
+        "type": "Socket.IO Client / Module API",
+        "description": "Connects to FoundryVTT instance",
+        "options": [
+          {
+            "name": "Socket.IO",
+            "description": "External connection to Foundry's Socket.IO server",
+            "pros": ["Works without module installation", "External bridge possible"],
+            "cons": ["Authentication challenges", "May break with Foundry updates"]
+          },
+          {
+            "name": "Module API",
+            "description": "Custom FoundryVTT module with exposed API",
+            "pros": ["More reliable", "Better authentication", "Access to internal APIs"],
+            "cons": ["Requires module installation", "Tight coupling"]
+          }
+        ]
+      },
+      "message_translator": {
+        "type": "Translation Engine",
+        "description": "Converts between Matrix and FoundryVTT message formats",
+        "responsibilities": [
+          "Format conversion (HTML, text, markdown)",
+          "Dice roll parsing and execution",
+          "Whisper/private message handling",
+          "Attachment/file handling",
+          "Special command processing"
+        ]
+      },
+      "user_mapper": {
+        "type": "User Mapping System",
+        "description": "Bidirectional user identity mapping",
+        "strategies": [
+          "Explicit configuration mapping",
+          "Automatic username matching",
+          "Ghost user creation for Matrix-only users"
+        ]
+      },
+      "state_sync": {
+        "type": "State Synchronization",
+        "description": "Keeps state consistent between systems",
+        "synced_items": [
+          "Room membership",
+          "User presence",
+          "Read receipts",
+          "Typing indicators"
+        ]
+      }
+    },
+    "topology": {
+      "recommended": "Application Service + Socket.IO",
+      "alternatives": [
+        "Matrix Bot User + Foundry Module",
+        "Foundry Module + External Bridge Service"
+      ]
+    },
+    "data_flow": {
+      "matrix_to_foundry": [
+        "User sends message in Matrix room",
+        "App Service receives m.room.message event",
+        "Bridge parses message content",
+        "Bridge looks up Foundry room mapping",
+        "Bridge translates message format",
+        "Bridge sends to Foundry via Socket.IO or Module API",
+        "Foundry displays message to players"
+      ],
+      "foundry_to_matrix": [
+        "Player sends chat message in Foundry",
+        "Foundry emits chatMessage event",
+        "Bridge module captures event",
+        "Bridge translates to Matrix format",
+        "Bridge sends m.room.message via App Service",
+        "Matrix homeserver delivers to room members"
+      ]
+    }
+  },
+  "configuration": {
+    "app_service_registration": {
+      "filename": "registration.yaml",
+      "template": {
+        "id": "foundryvtt-bridge",
+        "url": "http://localhost:8008",
+        "as_token": "${APP_SERVICE_TOKEN}",
+        "hs_token": "${HOMESERVER_TOKEN}",
+        "sender_localpart": "_foundry_bridge",
+        "namespaces": {
+          "users": [
+            {
+              "exclusive": true,
+              "regex": "@_foundry_.*:your\\.homeserver"
+            }
+          ],
+          "rooms": [],
+          "aliases": []
+        }
+      }
+    },
+    "main_config": {
+      "filename": "config.yaml",
+      "structure": {
+        "matrix": {
+          "homeserver": "https://matrix.yourserver.com",
+          "as_registration": "/path/to/registration.yaml",
+          "bot_username": "@foundry-bridge:yourserver.com",
+          "bot_password": "${BOT_PASSWORD}"
+        },
+        "foundry": {
+          "host": "localhost",
+          "port": 30000,
+          "api_token": "${FOUNDRY_API_TOKEN}",
+          "socketio": true,
+          "use_ssl": false
+        },
+        "bridge": {
+          "port": 8008,
+          "admin_users": ["@admin:yourserver.com"],
+          "room_mappings": {
+            "#matrix-room:yourserver.com": "foundry-world-id"
+          },
+          "default_world": "default-world",
+          "log_level": "info"
+        },
+        "features": {
+          "dice_rolls": true,
+          "file_upload": true,
+          "presence_sync": true,
+          "typing_indicators": true,
+          "ghost_users": true,
+          "whispers": true,
+          "reactions": true
+        },
+        "limits": {
+          "max_message_length": 4096,
+          "max_file_size_mb": 10,
+          "rate_limit_messages_per_minute": 60,
+          "max_retries": 3
+        }
+      }
+    },
+    "environment_variables": {
+      "MATRIX_HS_URL": "Matrix homeserver URL",
+      "MATRIX_AS_TOKEN": "Application Service token",
+      "MATRIX_HS_TOKEN": "Homeserver token",
+      "FOUNDRY_HOST": "FoundryVTT server hostname",
+      "FOUNDRY_PORT": "FoundryVTT server port",
+      "FOUNDRY_API_TOKEN": "FoundryVTT API token",
+      "BRIDGE_PORT": "Bridge server port",
+      "NODE_ENV": "Environment (development/production)"
+    }
+  },
+  "implementation": {
+    "phases": [
+      {
+        "phase": 1,
+        "name": "Core Bridge (MVP)",
+        "description": "Basic message forwarding between Matrix and FoundryVTT",
+        "tasks": [
+          "Set up Matrix Application Service",
+          "Implement basic message forwarding (text only)",
+          "Create simple user mapping (1:1)",
+          "Support single room bridging",
+          "Implement basic configuration loading"
+        ],
+        "deliverables": [
+          "Working App Service registration",
+          "Text messages flow both directions",
+          "Configuration file support"
+        ]
+      },
+      {
+        "phase": 2,
+        "name": "Enhanced Features",
+        "description": "Add support for rich content and multiple rooms",
+        "tasks": [
+          "Implement rich text formatting support",
+          "Add dice roll handling",
+          "Support multiple room mappings",
+          "Implement user presence synchronization",
+          "Add file/attachment bridging"
+        ],
+        "deliverables": [
+          "Formatted messages work correctly",
+          "Dice rolls execute in Foundry and return to Matrix",
+          "Multiple games can be bridged simultaneously"
+        ]
+      },
+      {
+        "phase": 3,
+        "name": "Advanced Features",
+        "description": "Add sophisticated interaction patterns",
+        "tasks": [
+          "Implement whisper/DM support",
+          "Add typing indicators",
+          "Implement read receipts",
+          "Add reaction support",
+          "Create custom command handling",
+          "Implement ghost user management"
+        ],
+        "deliverables": [
+          "Private messages work bidirectionally",
+          "Users see when others are typing",
+          "Reactions appear in both systems"
+        ]
+      },
+      {
+        "phase": 4,
+        "name": "Polish & Optimization",
+        "description": "Production-ready improvements",
+        "tasks": [
+          "Implement rate limiting",
+          "Add comprehensive error handling and retry logic",
+          "Add metrics and logging",
+          "Create admin API",
+          "Write documentation"
+        ],
+        "deliverables": [
+          "Stable, production-ready bridge",
+          "Complete documentation",
+          "Monitoring capabilities"
+        ]
+      }
+    ],
+    "dependencies": {
+      "runtime": "Node.js 18+",
+      "packages": {
+        "matrix-js-sdk": "^24.0.0",
+        "socket.io-client": "^4.7.0",
+        "axios": "^1.6.0",
+        "express": "^4.18.0",
+        "js-yaml": "^4.1.0",
+        "winston": "^3.11.0",
+        "dotenv": "^16.3.0",
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0"
+      }
+    },
+    "file_structure": {
+      "root": {
+        "src": {
+          "matrix": [
+            "MatrixClient.ts",
+            "AppService.ts",
+            "MatrixEventHandler.ts"
+          ],
+          "foundry": [
+            "FoundryClient.ts",
+            "SocketIOHandler.ts",
+            "ModuleAPI.ts"
+          ],
+          "core": [
+            "MessageTranslator.ts",
+            "UserMapper.ts",
+            "StateSync.ts",
+            "BridgeConfig.ts"
+          ],
+          "models": [
+            "MatrixEvent.ts",
+            "FoundryMessage.ts",
+            "UserMapping.ts"
+          ],
+          "utils": [
+            "Logger.ts",
+            "ErrorHandler.ts",
+            "RetryQueue.ts"
+          ],
+          "index.ts": "Main entry point"
+        },
+        "config": [
+          "registration.yaml.template",
+          "config.yaml.template"
+        ],
+        "tests": {
+          "unit": [],
+          "integration": [],
+          "e2e": []
+        },
+        "docs": [
+          "README.md",
+          "SETUP.md",
+          "CONFIGURATION.md",
+          "API.md"
+        ],
+        "scripts": [
+          "start.sh",
+          "dev.sh"
+        ],
+        "Dockerfile": "Docker container definition",
+        "docker-compose.yml": "Development environment",
+        "package.json": "Project configuration",
+        "tsconfig.json": "TypeScript configuration"
+      }
+    }
+  },
+  "code_snippets": {
+    "matrix_app_service": {
+      "description": "Basic Matrix Application Service setup",
+      "filename": "MatrixAppService.ts",
+      "key_methods": [
+        "register()",
+        "onEvent(event: MatrixEvent)",
+        "sendEvent(roomId: string, event: MatrixEvent)",
+        "start()"
+      ]
+    },
+    "message_translator": {
+      "description": "Message format conversion between systems",
+      "filename": "MessageTranslator.ts",
+      "key_methods": [
+        "matrixToFoundry(matrixEvent: MatrixEvent): FoundryMessage",
+        "foundryToMatrix(foundryMsg: FoundryMessage): MatrixEvent",
+        "handleDiceRoll(content: string): any",
+        "handleWhisper(content: any): any"
+      ]
+    },
+    "user_mapper": {
+      "description": "User identity mapping",
+      "filename": "UserMapper.ts",
+      "key_methods": [
+        "getMatrixUser(foundryUserId: string): string | null",
+        "getFoundryUser(matrixUserId: string): string | null",
+        "createGhostUser(matrixUserId: string): FoundryUser"
+      ]
+    }
+  },
+  "security": {
+    "authentication": {
+      "matrix": "Application Service tokens (not user passwords)",
+      "foundry": "API tokens with limited permissions",
+      "recommendations": [
+        "Never store plaintext passwords",
+        "Use environment variables for secrets",
+        "Rotate tokens regularly",
+        "Validate all incoming messages"
+      ]
+    },
+    "authorization": {
+      "matrix": "Restrict which users can use the bridge",
+      "foundry": "Control ghost user permissions",
+      "admin_commands": "Require explicit authentication"
+    },
+    "data_protection": {
+      "encryption": "Handle Matrix E2E encryption (bot cannot decrypt)",
+      "logging": "Don't log message content in production",
+      "compliance": "GDPR: Allow users to delete their data",
+      "secrets": "Encrypt sensitive configuration"
+    },
+    "rate_limiting": {
+      "messages_per_minute": 60,
+      "file_uploads_per_hour": 20,
+      "api_calls_per_second": 10
+    }
+  },
+  "error_handling": {
+    "scenarios": {
+      "matrix_down": {
+        "action": "Queue messages, retry with exponential backoff",
+        "max_retries": 5,
+        "notification": "Alert admins after 3 failures"
+      },
+      "foundry_down": {
+        "action": "Queue messages, retry with backoff",
+        "max_retries": 5,
+        "notification": "Alert admins immediately"
+      },
+      "invalid_message": {
+        "action": "Log error, skip message, notify sender",
+        "severity": "warning"
+      },
+      "auth_failure": {
+        "action": "Re-authenticate, notify admin if persistent",
+        "severity": "error"
+      }
+    },
+    "retry_strategy": {
+      "type": "Exponential backoff",
+      "initial_delay_ms": 1000,
+      "max_delay_ms": 30000,
+      "multiplier": 2
+    }
+  },
+  "testing": {
+    "strategy": {
+      "unit_tests": "Jest for individual components",
+      "integration_tests": "Test Matrix-Foundry interaction",
+      "e2e_tests": "Full message flow validation"
+    },
+    "environments": {
+      "local_matrix": "Synapse or Conduct in Docker",
+      "local_foundry": "FoundryVTT local instance",
+      "docker_compose": "Full stack for CI/CD"
+    },
+    "test_cases": [
+      {
+        "name": "Text message round-trip",
+        "description": "Matrix -> Bridge -> Foundry -> Bridge -> Matrix",
+        "expected": "Message content preserved, formatting intact"
+      },
+      {
+        "name": "Dice roll execution",
+        "description": "User sends /roll 1d20 in Matrix",
+        "expected": "Foundry executes roll, result returned to Matrix"
+      },
+      {
+        "name": "User mapping",
+        "description": "Multiple users with different mapping strategies",
+        "expected": "Messages attributed to correct users in both systems"
+      },
+      {
+        "name": "Error recovery",
+        "description": "Foundry server restarts during message",
+        "expected": "Message queued and delivered after restart"
+      }
+    ]
+  },
+  "deployment": {
+    "options": [
+      {
+        "name": "Docker Container",
+        "recommended": true,
+        "description": "Self-contained deployment",
+        "files": ["Dockerfile", "docker-compose.yml"],
+        "ports": ["8008/tcp"],
+        "volumes": ["/config", "/logs"]
+      },
+      {
+        "name": "Systemd Service",
+        "description": "Native Linux service",
+        "files": ["bridge.service"],
+        "requires": "Node.js 18+ installed"
+      },
+      {
+        "name": "Kubernetes",
+        "description": "For scalable deployments",
+        "files": ["deployment.yaml", "service.yaml"],
+        "notes": "Overkill for most use cases"
+      }
+    ],
+    "requirements": {
+      "matrix": "Synapse, Conduct, or Dendrite homeserver",
+      "foundry": "FoundryVTT v10 or v11",
+      "network": "Bridge must be able to reach both Matrix and Foundry",
+      "storage": "Minimal (config and logs only)"
+    },
+    "scaling": {
+      "single_instance": "Sufficient for most gaming groups",
+      "multiple_instances": "Possible with shared Redis for state",
+      "load_balancing": "Not typically needed"
+    }
+  },
+  "monitoring": {
+    "logging": {
+      "levels": ["error", "warn", "info", "debug"],
+      "outputs": ["console", "file"],
+      "rotation": "Daily log rotation"
+    },
+    "metrics": {
+      "counters": [
+        "messages_processed_total",
+        "messages_by_direction",
+        "errors_total",
+        "active_connections"
+      ],
+      "gauges": [
+        "message_queue_size",
+        "processing_latency_ms",
+        "memory_usage_mb"
+      ],
+      "histograms": [
+        "message_processing_time",
+        "api_call_latency"
+      ]
+    },
+    "alerts": {
+      "critical": [
+        "No messages processed in 5 minutes",
+        "Error rate > 10% for 1 minute",
+        "Memory usage > 90%"
+      ],
+      "warning": [
+        "Processing latency > 1 second",
+        "Queue size > 100 messages"
+      ]
+    }
+  },
+  "future_enhancements": [
+    {
+      "name": "Multi-world Support",
+      "description": "Bridge multiple Foundry worlds to different Matrix rooms",
+      "priority": "High"
+    },
+    {
+      "name": "Character Integration",
+      "description": "Link Matrix users to Foundry character sheets",
+      "priority": "Medium"
+    },
+    {
+      "name": "Initiative Tracking",
+      "description": "Sync combat initiative to Matrix",
+      "priority": "Medium"
+    },
+    {
+      "name": "Map Sharing",
+      "description": "Share Foundry maps as Matrix images",
+      "priority": "Low"
+    },
+    {
+      "name": "Voice Bridge",
+      "description": "Bridge voice chat between systems",
+      "priority": "Low",
+      "note": "Significantly more complex"
+    },
+    {
+      "name": "Bot Commands",
+      "description": "Matrix bot commands to control Foundry",
+      "priority": "Medium",
+      "examples": [
+        "/foundry roll initiative",
+        "/foundry set scene",
+        "/foundry play soundtrack"
+      ]
+    },
+    {
+      "name": "Webhook Support",
+      "description": "Allow Foundry modules to send custom events to Matrix",
+      "priority": "Medium"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "FoundryVTT Connection Method: Socket.IO or Module API?",
+      "options": [
+        {
+          "name": "Socket.IO",
+          "pros": ["Works externally", "No module installation required"],
+          "cons": ["Authentication challenges", "May break with updates"]
+        },
+        {
+          "name": "Module API",
+          "pros": ["More reliable", "Better authentication", "Access to internal APIs"],
+          "cons": ["Requires module installation", "Tight coupling"]
+        }
+      ],
+      "recommendation": "Start with Socket.IO for external bridge, add Module API later"
+    },
+    {
+      "id": "Q2",
+      "question": "Ghost User Permissions: What can Matrix-only users do?",
+      "options": [
+        "Chat only",
+        "Chat + see dice rolls",
+        "Chat + limited game state access",
+        "Full player permissions"
+      ],
+      "recommendation": "Chat + see dice rolls (configurable per-room)"
+    },
+    {
+      "id": "Q3",
+      "question": "Message History: Should the bridge sync historical messages?",
+      "options": [
+        "Full sync",
+        "Partial sync (last N messages)",
+        "No sync",
+        "On-demand sync"
+      ],
+      "recommendation": "Partial sync (last 100 messages) on bridge startup"
+    },
+    {
+      "id": "Q4",
+      "question": "E2E Encryption: How to handle encrypted Matrix rooms?",
+      "options": [
+        "Require bot to be in room (cannot decrypt)",
+        "Warn users that E2E rooms won't bridge",
+        "Ignore encrypted rooms",
+        "Attempt to decrypt with user keys"
+      ],
+      "recommendation": "Warn users and skip encrypted rooms (bot cannot decrypt)"
+    },
+    {
+      "id": "Q5",
+      "question": "Rate Limiting: What limits should be imposed?",
+      "suggestions": {
+        "messages_per_second": 5,
+        "messages_per_minute": 60,
+        "file_upload_size_mb": 10,
+        "api_calls_per_second": 10
+      }
+    },
+    {
+      "id": "Q6",
+      "question": "Deployment Model: Single instance or per-world?",
+      "options": [
+        "Single bridge serving multiple Foundry instances",
+        "Dedicated bridge per Foundry server",
+        "Dedicated bridge per Foundry world"
+      ],
+      "recommendation": "Single bridge with multiple world support"
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "name": "Matrix Application Service API",
+        "url": "https://matrix.org/docs/spec/application_service/unstable"
+      },
+      {
+        "name": "matrix-js-sdk Documentation",
+        "url": "https://matrix-org.github.io/matrix-js-sdk/"
+      },
+      {
+        "name": "FoundryVTT API Documentation",
+        "url": "https://foundryvtt.com/api/"
+      },
+      {
+        "name": "FoundryVTT Module Development",
+        "url": "https://foundryvtt.com/article/module-development/"
+      },
+      {
+        "name": "Socket.IO Documentation",
+        "url": "https://socket.io/docs/v4/"
+      }
+    ],
+    "example_projects": [
+      {
+        "name": "matrix-appservice-nodejs",
+        "url": "https://github.com/matrix-org/matrix-appservice-nodejs",
+        "description": "Official Matrix App Service library for Node.js"
+      },
+      {
+        "name": "matrix-bot-sdk",
+        "url": "https://github.com/turt2live/matrix-bot-sdk",
+        "description": "SDK for building Matrix bots"
+      },
+      {
+        "name": "foundryvtt-simple-calculator",
+        "url": "https://github.com/ChrisZ1998/foundryvtt-simple-calculator",
+        "description": "Example FoundryVTT module"
+      }
+    ],
+    "development_tools": [
+      {
+        "name": "matrix-docker-ansible-deploy",
+        "url": "https://github.com/spantaleev/matrix-docker-ansible-deploy",
+        "description": "Easy Matrix server setup for development"
+      },
+      {
+        "name": "FoundryVTT Local Development",
+        "url": "https://foundryvtt.com/article/launching-foundry-vtt/",
+        "description": "Guide to running FoundryVTT locally"
+      }
+    ]
+  },
+  "glossary": {
+    "terms": {
+      "Matrix": "Decentralized communication protocol",
+      "Homeserver": "Matrix server that hosts user accounts and rooms",
+      "Application Service": "Matrix component that can send/receive events as if it were a user",
+      "FoundryVTT": "Virtual Tabletop for playing RPG games online",
+      "Socket.IO": "JavaScript library for realtime web applications",
+      "E2E Encryption": "End-to-End Encryption in Matrix rooms",
+      "Ghost User": "Synthetic user created in one system to represent a user from the other",
+      "Room": "Matrix chat room / FoundryVTT game world",
+      "Event": "Matrix message or state change",
+      "Module": "FoundryVTT plugin/extension"
+    }
+  }
+}
