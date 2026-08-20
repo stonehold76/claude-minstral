@@ -1,0 +1,238 @@
+# Matrix-FoundryVTT Bridge Configuration Template
+# 
+# Copy this file to config.yaml and customize for your environment.
+# All settings can also be specified via environment variables.
+
+# =============================================================================
+# MATRIX CONFIGURATION
+# =============================================================================
+matrix:
+  # URL of your Matrix homeserver
+  # Example: https://matrix.yourserver.com
+  homeserver: "https://matrix.yourserver.com"
+  
+  # Path to the Application Service registration file
+  # Default: ./registration.yaml
+  as_registration: "./registration.yaml"
+  
+  # Application Service settings (from registration.yaml)
+  # These can be omitted if using the registration file
+  # id: "foundryvtt-bridge"
+  # as_token: "your_app_service_token"
+  # hs_token: "your_homeserver_token"
+  # sender_localpart: "_foundry_bridge"
+  
+  # Alternative: Use a Matrix bot user instead of Application Service
+  # Uncomment and configure if not using AS
+  # bot_username: "@foundry-bridge:yourserver.com"
+  # bot_password: "your_bot_password"
+
+# =============================================================================
+# FOUNDRYVTT CONFIGURATION
+# =============================================================================
+foundry:
+  # FoundryVTT server hostname or IP address
+  host: "localhost"
+  
+  # FoundryVTT server port (default: 30000)
+  port: 30000
+  
+  # Whether to use SSL/TLS for the connection
+  use_ssl: false
+  
+  # Whether to use Socket.IO for connection (true) or REST API (false)
+  socketio: true
+  
+  # Socket.IO path (default: /socket.io)
+  # path: "/socket.io"
+  
+  # FoundryVTT API token (for Module API or authentication)
+  # Generate in Foundry: Settings -> API -> Create Token
+  # api_token: "your_foundry_api_token"
+  
+  # FoundryVTT username (for basic auth)
+  # username: "your_username"
+  
+  # FoundryVTT password (for basic auth)
+  # password: "your_password"
+  
+  # Path to FoundryVTT data directory (for module approach)
+  # data_path: "/path/to/foundry/data"
+  
+  # Whether the Foundry module is enabled
+  # module_enabled: false
+  
+  # Connection timeout in milliseconds
+  timeout: 30000
+  
+  # Reconnection interval in milliseconds
+  reconnect_interval: 5000
+
+# =============================================================================
+# BRIDGE CONFIGURATION
+# =============================================================================
+bridge:
+  # Port for the bridge server to listen on
+  port: 8008
+  
+  # Host for the bridge server (default: localhost)
+  # host: "0.0.0.0"
+  
+  # Matrix user IDs with admin privileges
+  # These users can perform administrative actions via the bridge
+  admin_users:
+    - "@admin:yourserver.com"
+    # - "@gm:yourserver.com"
+  
+  # Room mappings: Matrix room ID/alias -> Foundry world ID
+  # Add your room mappings here
+  room_mappings:
+    # Example: Map Matrix room to Foundry world
+    "#dnd-campaign:yourserver.com": "your-world-id"
+    # "#call-of-cthulhu:yourserver.com": "another-world-id"
+  
+  # Default Foundry world for unmapped rooms
+  # If a Matrix room is not in room_mappings, messages will be sent to this world
+  # default_world: "default-world-id"
+  
+  # Logging configuration
+  log_level: "info"  # debug, info, warn, error
+  log_file: "/var/log/foundry-bridge.log"
+
+# =============================================================================
+# FEATURE TOGGLES
+# =============================================================================
+features:
+  # Enable dice roll parsing and execution
+  dice_rolls: true
+  
+  # Enable file/attachment bridging
+  file_upload: true
+  
+  # Enable user presence synchronization
+  presence_sync: true
+  
+  # Enable typing indicator synchronization
+  typing_indicators: true
+  
+  # Enable ghost user creation for Matrix-only users
+  ghost_users: true
+  
+  # Enable whisper/DM support
+  whispers: true
+  
+  # Enable reaction support
+  reactions: true
+  
+  # Enable read receipt synchronization
+  read_receipts: false
+
+# =============================================================================
+# RATE LIMITING AND PERFORMANCE
+# =============================================================================
+limits:
+  # Maximum message length in characters
+  max_message_length: 4096
+  
+  # Maximum file size in MB
+  max_file_size_mb: 10
+  
+  # Messages per minute per user
+  rate_limit_messages_per_minute: 60
+  
+  # API calls per second
+  rate_limit_api_calls_per_second: 10
+  
+  # Maximum retry attempts for failed messages
+  max_retries: 3
+  
+  # Retry configuration
+  retry:
+    # Initial delay in milliseconds
+    initial_delay_ms: 1000
+    
+    # Maximum delay in milliseconds
+    max_delay_ms: 30000
+    
+    # Multiplier for exponential backoff
+    multiplier: 2
+
+# =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+security:
+  # Allowed IP addresses for admin API access
+  # Leave empty to allow all
+  allowed_ips:
+    # - "192.168.1.0/24"
+    # - "10.0.0.0/8"
+  
+  # Blocked Matrix users
+  blocked_users:
+    # - "@spammer:matrix.server.com"
+  
+  # Allowed Matrix users (if non-empty, only these users can use the bridge)
+  allowed_users:
+    # - "@alice:matrix.server.com"
+    # - "*@matrix.server.com"  # Allow all users from this server
+  
+  # TLS configuration for the bridge server
+  tls:
+    enabled: false
+    # cert_file: "/path/to/cert.pem"
+    # key_file: "/path/to/key.pem"
+  
+  # CORS configuration for the bridge server
+  cors:
+    origins:
+      - "http://localhost:3000"
+      - "https://matrix.yourserver.com"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+
+# =============================================================================
+# USER MAPPING CONFIGURATION
+# =============================================================================
+# Users can also be configured in a separate users.yaml file
+users:
+  # Explicit user mappings: Matrix user -> Foundry user
+  mappings:
+    # "@alice:matrix.server.com": "Alice"
+    # "@bob:matrix.server.com": "Bob"
+    # "@gm:matrix.server.com": "GameMaster"
+  
+  # Default behavior for unmapped users
+  default:
+    # Strategy: "create_ghost", "ignore", or "error"
+    strategy: "create_ghost"
+    
+    # Ghost user settings
+    ghost:
+      # Prefix for ghost user names
+      prefix: "Matrix_"
+      
+      # Permissions for ghost users
+      permissions:
+        - "chat"
+        # - "view_dice"
+        # - "whisper"
+        # - "upload_files"
+
+# =============================================================================
+# ROOM MAPPING CONFIGURATION
+# =============================================================================
+# Rooms can also be configured in a separate rooms.yaml file
+rooms:
+  # Room mappings with direction
+  mappings:
+    # - matrix_room: "#dnd-campaign:matrix.server.com"
+    #   foundry_world: "world-id-123"
+    #   direction: "both"  # "matrix_to_foundry", "foundry_to_matrix", or "both"
+  
+  # Default settings for unmapped rooms
+  default:
+    enabled: false
+    direction: "both"

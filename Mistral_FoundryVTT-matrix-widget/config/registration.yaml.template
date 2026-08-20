@@ -1,0 +1,55 @@
+# Matrix Application Service Registration Template
+# 
+# This file is used to register the bridge as an Application Service with your Matrix homeserver.
+# Copy this file to registration.yaml and fill in the required values.
+#
+# For Synapse, place this file in your Synapse's app_service_config_files directory
+# or use the admin API to register it.
+
+# Unique identifier for this Application Service
+id: foundryvtt-bridge
+
+# URL where the Application Service can be reached
+# This should be the public URL where your bridge is hosted
+url: http://localhost:8008
+
+# Application Service token (shared secret between AS and homeserver)
+# Generate a secure random token
+as_token: "your_app_service_token_here"
+
+# Homeserver token (shared secret between homeserver and AS)
+# Generate a secure random token
+hs_token: "your_homeserver_token_here"
+
+# Localpart for the Application Service user
+# This will be the user ID prefix for the AS user (e.g., @_foundry_bridge:your.homeserver)
+sender_localpart: "_foundry_bridge"
+
+# Namespaces for the Application Service
+# These define which user IDs and room aliases the AS can use
+namespaces:
+  # User namespaces
+  users:
+    - # Only allow users matching this pattern
+      exclusive: true
+      # Regex for user IDs that this AS can use
+      # This allows the AS to use user IDs like @_foundry_*:your.homeserver
+      regex: "@_foundry_.*:your\\.homeserver"
+  
+  # Room namespaces (optional)
+  # Uncomment if your AS needs to create rooms
+  # rooms:
+  #   - exclusive: true
+  #     regex: "#foundry_.*:your\\.homeserver"
+  
+  # Alias namespaces (optional)
+  # Uncomment if your AS needs to create room aliases
+  # aliases:
+  #   - exclusive: true
+  #     regex: "#foundry_.*:your\\.homeserver"
+
+# Rate limiting (optional)
+# rate_limited: false
+
+# Protocol version (optional)
+# protocol: "unstable"
