@@ -6,6 +6,38 @@ This guide walks you through deploying the bridge in production, using `foundry.
 
 ---
 
+## 🎯 Quick Start (Your Configuration)
+
+For your specific setup with **GameMaster bot** on **thedagora.social**:
+
+**Room ID:** `!ioIGXPMvsniZqjrndd:thedagora.social`  
+**Bot User:** `@gamemaster:thedagora.social`  
+**Homeserver:** `https://thedagora.social/`  
+**Device ID:** `JISMWUXVGG`
+
+**Minimal config.json for your setup:**
+```json
+{
+  "foundry": {
+    "host": "foundry.cognitivecosmos.games",
+    "port": 30000,
+    "use_ssl": true,
+    "licensed_room_id": "!ioIGXPMvsniZqjrndd:thedagora.social",
+    "enforce_license": true
+  },
+  "matrix": {
+    "homeserver": "https://thedagora.social/",
+    "username": "@gamemaster:thedagora.social",
+    "password": "your-bot-password"
+  },
+  "port": 3001
+}
+```
+
+**⚠️ SECURITY NOTE:** Never commit your access token to version control. Store it in environment variables or a secure config file that is NOT committed to Git.
+
+---
+
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
@@ -79,27 +111,26 @@ The bridge can be configured via environment variables or a `config.json` file.
 #### Required Environment Variables
 
 ```bash
-# FoundryVTT connection
+# FoundryVTT connection (YOUR SETUP)
 export FOUNDRY_HOST=foundry.cognitivecosmos.games
 export FOUNDRY_PORT=30000
 export FOUNDRY_USE_SSL=true
 
-# Matrix connection
-export MATRIX_HOMESERVER=https://matrix.org
-export MATRIX_USERNAME=@your-bot:matrix.org
-export MATRIX_PASSWORD=your-bot-password
+# Matrix connection (YOUR GAMEMASTER BOT)
+export MATRIX_HOMESERVER=https://thedagora.social/
+export MATRIX_USERNAME=@gamemaster:thedagora.social
 
 # Bridge server
 export BRIDGE_PORT=3001
 
-# License (optional - see License Enforcement section)
-export LICENSED_ROOM_ID=!yourRoomId:matrix.org
+# License (YOUR ROOM)
+export LICENSED_ROOM_ID=!ioIGXPMvsniZqjrndd:thedagora.social
 export ENFORCE_LICENSE=true
 ```
 
 #### Using a Configuration File
 
-Create a `config.json` file:
+Create a `config.json` file (DO NOT COMMIT THIS TO GIT):
 
 ```json
 {
@@ -112,12 +143,12 @@ Create a `config.json` file:
     "api_port": 30001,
     "module_enabled": true,
     "enforce_license": true,
-    "licensed_room_id": "!yourRoomId:matrix.org"
+    "licensed_room_id": "!ioIGXPMvsniZqjrndd:thedagora.social"
   },
   "matrix": {
-    "homeserver": "https://matrix.org",
-    "display_name": "FoundryVTT Bridge",
-    "username": "@your-bot:matrix.org",
+    "homeserver": "https://thedagora.social/",
+    "display_name": "GameMaster",
+    "username": "@gamemaster:thedagora.social",
     "password": "your-bot-password"
   },
   "scene_sync": {
@@ -127,8 +158,10 @@ Create a `config.json` file:
     "thumbnail_mode": false,
     "max_image_size": 10485760
   },
-  "room_mappings": {},
-  "admin_users": [],
+  "room_mappings": {
+    "!ioIGXPMvsniZqjrndd:thedagora.social": "your-foundry-world-id"
+  },
+  "admin_users": ["@gamemaster:thedagora.social"],
   "port": 3001,
   "log_level": "info",
   "debug_mode": false,
@@ -141,6 +174,13 @@ Create a `config.json` file:
     "license_enforcement": true
   }
 }
+```
+
+**⚠️ IMPORTANT:** Add `config.json` to your `.gitignore` file to prevent accidentally committing secrets:
+```
+echo "config.json" >> .gitignore
+echo "*.token" >> .gitignore
+echo ".env" >> .gitignore
 ```
 
 ---
@@ -188,7 +228,7 @@ You should see JSON responses indicating the API is healthy.
 
 The bridge can run as:
 1. **Application Service** - Recommended for production (requires AS registration)
-2. **User Bot** - Simpler, uses a Matrix user account
+2. **User Bot** - Simpler, uses a Matrix user account (YOUR CHOICE)
 
 ### Option A: Application Service (Recommended)
 
@@ -206,56 +246,54 @@ rate_limited: false
 namespaces:
   users:
     - exclusive: true
-      regex: '@foundry_.*:your-homeserver'
-  rooms:
-    - exclusive: true
-      regex: '#foundry_.*:your-homeserver'
-  aliases:
-    - exclusive: true
-      regex: '#foundry_.*:your-homeserver'
+      regex: '@foundry_.*:thedagora.social'
+  rooms: []
+  aliases: []
 ```
 
 #### Step 2: Register with Matrix Homeserver
 
 ```bash
-# For Synapse
+# For Synapse (if self-hosting)
 admin register-app-service -c registration.yaml
 
-# Or manually add to homeserver.yaml
+# For thedagora.social, you may need to contact the admin
 ```
 
-#### Step 3: Configure Bridge
+### Option B: User Bot (Simpler - YOUR CURRENT SETUP)
 
-Update your configuration:
+Since you've already created the **GameMaster** bot, you can use **user bot mode**:
+
+#### Step 1: Use Your Bot Credentials
+
+You have:
+- **User ID:** `@gamemaster:thedagora.social`
+- **Homeserver:** `https://thedagora.social/`
+- **Device ID:** `JISMWUXVGG`
+
+**Store your access token securely in environment variables:**
+```bash
+export MATRIX_ACCESS_TOKEN=your_access_token_here
+```
+
+#### Step 2: Configure Bridge for User Bot Mode
 
 ```json
 {
   "matrix": {
-    "homeserver": "https://matrix.org",
-    "id": "foundryvtt_bridge",
-    "sender_localpart": "_foundry_bridge"
+    "homeserver": "https://thedagora.social/",
+    "username": "@gamemaster:thedagora.social",
+    "display_name": "GameMaster"
   }
 }
 ```
 
-### Option B: User Bot (Simpler)
+Then pass the access token via environment variable.
 
-#### Step 1: Create a Matrix User
-
-1. Register a new user on your Matrix homeserver (e.g., `@foundry-bridge:matrix.org`)
-2. Save the username and password
-
-#### Step 2: Configure Bridge
-
-```json
-{
-  "matrix": {
-    "homeserver": "https://matrix.org",
-    "username": "@foundry-bridge:matrix.org",
-    "password": "your-password"
-  }
-}
-```
+**Note:** User bot mode has some limitations:
+- Cannot send messages as other users (only as the bot)
+- Cannot create ghost users
+- Simpler to set up
 
 ---
 
@@ -327,15 +365,15 @@ The bridge enforces that it can only be used in **one Matrix room at a time**:
 3. **Blocking**: Requests from unlicensed rooms are rejected with 403 Forbidden
 4. **Widget Integration**: The widget shows a warning and disables sending if not licensed
 
-### Setting the Licensed Room
+### Setting the Licensed Room (YOUR ROOM)
 
 ```bash
-# Set the licensed room ID
+# Set YOUR specific room as licensed
 curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/license/set \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "room_id": "!yourRoomId:matrix.org",
+    "room_id": "!ioIGXPMvsniZqjrndd:thedagora.social",
     "enforce": true
   }'
 ```
@@ -343,12 +381,12 @@ curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/licens
 ### Validating a Room
 
 ```bash
-# Check if a room is licensed
+# Check if YOUR room is licensed
 curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/license/validate \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "room_id": "!testRoom:matrix.org"
+    "room_id": "!ioIGXPMvsniZqjrndd:thedagora.social"
   }'
 ```
 
@@ -358,21 +396,8 @@ curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/licens
 {
   "success": true,
   "is_licensed": true,
-  "room_id": "!yourRoomId:matrix.org",
-  "licensed_room_id": "!yourRoomId:matrix.org",
-  "timestamp": 1234567890
-}
-```
-
-### Expected Response (Not Licensed)
-
-```json
-{
-  "success": false,
-  "is_licensed": false,
-  "room_id": "!testRoom:matrix.org",
-  "licensed_room_id": "!yourRoomId:matrix.org",
-  "error": "Room !testRoom:matrix.org is not licensed. Only room !yourRoomId:matrix.org is authorized.",
+  "room_id": "!ioIGXPMvsniZqjrndd:thedagora.social",
+  "licensed_room_id": "!ioIGXPMvsniZqjrndd:thedagora.social",
   "timestamp": 1234567890
 }
 ```
@@ -481,7 +506,8 @@ docker run -d \
   -p 3001:3001 \
   -e FOUNDRY_HOST=foundry.cognitivecosmos.games \
   -e FOUNDRY_PORT=30000 \
-  -e MATRIX_HOMESERVER=https://matrix.org \
+  -e MATRIX_HOMESERVER=https://thedagora.social/ \
+  -e LICENSED_ROOM_ID=!ioIGXPMvsniZqjrndd:thedagora.social \
   matrix-foundry-bridge
 ```
 
@@ -499,18 +525,18 @@ curl http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/health
 curl http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/info
 ```
 
-### Test License System
+### Test License System (YOUR ROOM)
 
 ```bash
-# Set licensed room
+# Set YOUR room as licensed
 curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/license/set \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"room_id": "!testRoom:matrix.org"}'
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -d '{"room_id": "!ioIGXPMvsniZqjrndd:thedagora.social"}'
 
-# Validate room
+# Validate YOUR room
 curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/license/validate \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"room_id": "!testRoom:matrix.org"}'
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -d '{"room_id": "!ioIGXPMvsniZqjrndd:thedagora.social"}'
 ```
 
 ### Test Scene Sync
@@ -518,7 +544,7 @@ curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/licens
 ```bash
 # Get current scene background
 curl http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/scenes/current/background \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer YOUR_API_TOKEN"
 ```
 
 ### Test Dice Rolls
@@ -526,7 +552,7 @@ curl http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/scenes/current
 ```bash
 # Roll dice
 curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/dice/roll \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "worldId": "your-world-id",
@@ -540,7 +566,7 @@ curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/dice/r
 ```bash
 # Perform an attribute check (system-agnostic)
 curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/checks/attribute \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "worldId": "your-world-id",
@@ -561,10 +587,10 @@ curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/checks
 |-------|----------|
 | Connection refused to Foundry | Check Foundry is running, verify host/port |
 | API returns 401 Unauthorized | Check API token in module configuration |
-| API returns 403 Forbidden | Check license - room may not be licensed |
+| API returns 403 Forbidden | Check license - room may not be `!ioIGXPMvsniZqjrndd:thedagora.social` |
 | No background sync | Verify scene sync is enabled in config |
 | Widget doesn't load | Check browser console for errors |
-| Matrix events not received | Verify Application Service registration |
+| Matrix events not received | Verify bot token for `@gamemaster:thedagora.social` |
 
 ### Debug Mode
 
@@ -599,15 +625,13 @@ pm2 logs matrix-foundry-bridge
 ### Verify Matrix Connection
 
 ```bash
-# Test Matrix client connection
-curl -X POST https://matrix.org/_matrix/client/v3/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "m.login.password",
-    "user": "@your-bot:matrix.org",
-    "password": "your-password"
-  }'
+# Test Matrix client connection with your bot
+# Replace YOUR_ACCESS_TOKEN with your actual token
+curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  https://thedagora.social/_matrix/client/v3/account/whoami
 ```
+
+This should return your bot's user information.
 
 ---
 
@@ -622,7 +646,7 @@ curl -X POST https://matrix.org/_matrix/client/v3/login \
 
 ```json
 {
-  "corsOrigins": "https://your-matrix-server.com,https://your-widget-server.com"
+  "corsOrigins": "https://thedagora.social"
 }
 ```
 
@@ -654,9 +678,10 @@ server {
 
 ### License Security
 
-1. **Keep licensed room ID secret**: Don't expose it in public repositories
+1. **Keep licensed room ID secret**: Don't expose `!ioIGXPMvsniZqjrndd:thedagora.social` in public repositories
 2. **Use environment variables**: Store sensitive data in environment variables
 3. **Rotate tokens**: Regularly rotate API tokens and passwords
+4. **Never commit access tokens**: Your Matrix access token should NEVER be in version control
 
 ---
 
@@ -688,73 +713,38 @@ pm2 restart matrix-foundry-bridge
 
 ---
 
-## Example: Complete Production Setup
+## 📋 Your Configuration Summary
 
-Here's a complete example using `foundry.cognitivecosmos.games:30000`:
+Here's everything you need for your specific setup:
 
-### 1. Foundry Server
+### FoundryVTT Server
+- **URL:** `https://foundry.cognitivecosmos.games:30000/`
+- **Module API:** `https://foundry.cognitivecosmos.games:30001/api/matrix-bridge`
 
-- URL: `https://foundry.cognitivecosmos.games:30000/`
-- Module API: `https://foundry.cognitivecosmos.games:30001/api/matrix-bridge`
-- API Token: `your-secure-token`
+### Matrix Bot
+- **User ID:** `@gamemaster:thedagora.social`
+- **Homeserver:** `https://thedagora.social/`
+- **Device ID:** `JISMWUXVGG`
 
-### 2. Bridge Server
+### Licensed Room
+- **Room ID:** `!ioIGXPMvsniZqjrndd:thedagora.social`
 
-- Host: `bridge.your-domain.com`
-- Port: 3001
-- Configuration:
+### Bridge Server
+- **Port:** 3001 (recommended)
+- **Configuration:** Use the examples above, storing your access token securely
 
-```json
-{
-  "foundry": {
-    "host": "foundry.cognitivecosmos.games",
-    "port": 30000,
-    "use_ssl": true,
-    "api_enabled": true,
-    "api_port": 30001,
-    "api_token": "your-secure-token",
-    "licensed_room_id": "!yourRoomId:matrix.org",
-    "enforce_license": true
-  },
-  "matrix": {
-    "homeserver": "https://matrix.org",
-    "username": "@foundry-bridge:matrix.org",
-    "password": "your-bot-password"
-  },
-  "scene_sync": {
-    "enabled": true,
-    "check_interval": 5000
-  },
-  "port": 3001
-}
-```
-
-### 3. Matrix Widget
-
-```tsx
-<MatrixWidgetContainer
-    homeserver="https://matrix.org"
-    roomId="!yourRoomId:matrix.org"
-    asToken="your-app-service-token"
-    showLicenseWarnings={true}
-    style={{ height: '100vh', width: '100%' }}
-/>
-```
-
-### 4. Verify Everything Works
+### Quick Test Commands
 
 ```bash
-# Check Foundry module
-curl https://foundry.cognitivecosmos.games:30001/api/matrix-bridge/health
+# Set your licensed room
+curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/license/set \
+  -H "Authorization: Bearer YOUR_FOUNDRY_API_TOKEN" \
+  -d '{"room_id": "!ioIGXPMvsniZqjrndd:thedagora.social"}'
 
-# Check license
-curl -X POST https://foundry.cognitivecosmos.games:30001/api/matrix-bridge/license/validate \
-  -H "Authorization: Bearer your-secure-token" \
-  -d '{"room_id": "!yourRoomId:matrix.org"}'
-
-# Check scene background
-curl https://foundry.cognitivecosmos.games:30001/api/matrix-bridge/scenes/current/background \
-  -H "Authorization: Bearer your-secure-token"
+# Verify license
+curl -X POST http://foundry.cognitivecosmos.games:30001/api/matrix-bridge/license/validate \
+  -H "Authorization: Bearer YOUR_FOUNDRY_API_TOKEN" \
+  -d '{"room_id": "!ioIGXPMvsniZqjrndd:thedagora.social"}'
 ```
 
 ---
@@ -765,7 +755,6 @@ For issues or questions:
 
 - **GitHub Issues**: [stonehold76/claude-minstral](https://github.com/stonehold76/claude-minstral/issues)
 - **Matrix**: `@stonehold76:matrix.org`
-- **Discord**: (if applicable)
 
 ---
 
@@ -776,3 +765,4 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 ---
 
 *Deployment Guide for Matrix-FoundryVTT Bridge v1.0.0*
+*Customized for: GameMaster bot on thedagora.social, Room: !ioIGXPMvsniZqjrndd:thedagora.social*
