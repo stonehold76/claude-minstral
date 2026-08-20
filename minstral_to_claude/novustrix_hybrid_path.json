@@ -1,0 +1,217 @@
+{
+  "metadata": {
+    "title": "Novustrix Hybrid Path: Curated Client + Matrix Standardization",
+    "version": "1.0",
+    "date": "2025-08-20",
+    "status": "Proposal for Claude Review",
+    "author": "stonehold76"
+  },
+  "executive_summary": {
+    "goal": "Build Novustrix as a curated Matrix client for Cognitive Cosmos while pushing its collaborative features into Matrix standards to prevent fediverse fragmentation.",
+    "approach": [
+      "Validate Novustrix features with real users (Cognitive Cosmos) first.",
+      "Standardize successful features via Matrix Specification Changes (MSCs).",
+      "Maintain backward compatibility."
+    ],
+    "timeline": "3-5 years",
+    "priority": "Safety net for Cognitive Cosmos + long-term decentralization"
+  },
+  "phases": [
+    {
+      "name": "Phase 0: Foundations",
+      "duration": "0-3 Months",
+      "goal": "Validate core technical bets and establish the Novustrix platform.",
+      "deliverable": "Novustrix alpha",
+      "tasks": [
+        {
+          "name": "Widget Host + SDK",
+          "items": [
+            {"task": "Implement Flutter widget host", "owner": "Dev", "output": "Flutter fork with widget host", "success_criteria": "Widgets render in all platforms"},
+            {"task": "Define postMessage protocol v1", "owner": "Dev", "output": "Protocol doc + implementation", "success_criteria": "Bidirectional communication works"},
+            {"task": "Build server-side proxy", "owner": "Dev", "output": "Proxy service", "success_criteria": "Widgets sandboxed and qualified"},
+            {"task": "Integrate Katrix as first widget", "owner": "Dev", "output": "Katrix in widget host", "success_criteria": "Basic IDE works"},
+            {"task": "Security audit", "owner": "Security", "output": "Test suite", "success_criteria": "All malicious test cases blocked"}
+          ]
+        },
+        {
+          "name": "Discord-Like UI",
+          "items": [
+            {"task": "Rebuild UI: Space rail → Channel list → Message pane → Member list", "owner": "Dev", "output": "UI implementation", "success_criteria": "Matches Discord"},
+            {"task": "Map Matrix Spaces → Servers, Rooms → Channels", "owner": "Dev", "output": "Data model", "success_criteria": "Intuitive navigation"},
+            {"task": "Categories → Nested sub-spaces", "owner": "Dev", "output": "Space hierarchy", "success_criteria": "2-level nesting works"}
+          ]
+        },
+        {
+          "name": "Mandatory Rooms",
+          "items": [
+            {"task": "Bug reporting room + widget", "owner": "Dev", "output": "Bug form widget", "success_criteria": "Bugs logged and trackable"},
+            {"task": "Widget Workshop (Basic tier)", "owner": "Dev", "output": "WYSIWYG creator", "success_criteria": "Non-coders can create widgets"},
+            {"task": "Provisioning bot", "owner": "Dev", "output": "Auto-create rooms", "success_criteria": "New users get defaults"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 1: Novustrix-First",
+      "duration": "3-12 Months",
+      "goal": "Ship fully functional Novustrix client for Cognitive Cosmos.",
+      "deliverable": "Novustrix beta",
+      "tasks": [
+        {
+          "name": "Collaborative Features",
+          "items": [
+            {"feature": "Reaction Roles", "tasks": ["Client-side roles", "Reaction-based assignment"], "success_criteria": "Roles render in Novustrix"},
+            {"feature": "Voice Captions", "tasks": ["VOSK server + consent UI"], "success_criteria": "Live captions with consent"},
+            {"feature": "Studios", "tasks": ["Visual Artistry", "The Anvil", "Audio Studio", "The Hearth"], "success_criteria": "All studios functional"},
+            {"feature": "Cross-Arts Bus", "tasks": ["Pub/sub system"], "success_criteria": "Inter-widget comms work"},
+            {"feature": "Modmail", "tasks": ["Matrix-native modmail"], "success_criteria": "Staff can manage tickets"},
+            {"feature": "Alexandria Snippet Import", "tasks": ["SearxNG integration"], "success_criteria": "Snippets import with attribution"}
+          ]
+        },
+        {
+          "name": "Qualification Gate",
+          "items": [
+            {"task": "Define qualification rules", "output": "YAML schema", "success_criteria": "Rules version-controlled"},
+            {"task": "Implement automated checks", "output": "CI pipeline", "success_criteria": "Widgets pass/fail automatically"},
+            {"task": "Build Great Repository v1", "output": "Registry service", "success_criteria": "Widgets searchable"},
+            {"task": "Add operator override", "output": "Admin UI", "success_criteria": "Operators can allow blocked widgets"},
+            {"task": "Public ledger", "output": "Ledger API", "success_criteria": "All decisions auditable"}
+          ]
+        },
+        {
+          "name": "Deployment",
+          "items": [
+            {"task": "Deploy testrix.stonegamingtable.net", "output": "Synapse homeserver", "success_criteria": "Federation works"},
+            {"task": "Deploy Novustrix client", "output": "Web + mobile builds", "success_criteria": "Cognitive Cosmos can use it"},
+            {"task": "Migration tools", "output": "Scripts + docs", "success_criteria": "Discord → Novustrix smooth"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 2: Standardization",
+      "duration": "6-18 Months",
+      "goal": "Propose Novustrix features as Matrix standards (MSCs).",
+      "tasks": [
+        {
+          "name": "Standardization Strategy",
+          "items": [
+            {"step": "Engage Matrix community", "timeline": "Month 6"},
+            {"step": "Identify standardizable features", "timeline": "Month 6"},
+            {"step": "Draft MSC for Roles", "output": "MSC-XXXX: Roles", "timeline": "Month 9"},
+            {"step": "Draft MSC for Widgets", "output": "MSC-XXXX: Enhanced Widgets", "timeline": "Month 12"},
+            {"step": "Draft MSC for Studios", "output": "MSC-XXXX: Studios", "timeline": "Month 15"},
+            {"step": "Draft MSC for Cross-Arts Bus", "output": "MSC-XXXX: Widget Bus", "timeline": "Month 18"}
+          ]
+        },
+        {
+          "name": "Standardization Priorities",
+          "priorities": [
+            {"priority": "P0", "feature": "Widget API Extensions", "rationale": "Core to Novustrix"},
+            {"priority": "P0", "feature": "Roles", "rationale": "Community management"},
+            {"priority": "P1", "feature": "Studios", "rationale": "Collaborative spaces"},
+            {"priority": "P1", "feature": "Cross-Arts Bus", "rationale": "Inter-widget comms"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 3: Hybrid Implementation",
+      "duration": "12-24 Months",
+      "goal": "Support both Matrix standards + Novustrix extensions.",
+      "tasks": [
+        {
+          "name": "Dual-Mode Features",
+          "features": [
+            {"feature": "Roles", "standard_mode": "m.role event", "novustrix_mode": "com.novustrix.role", "fallback": "Ignore Novustrix extension if standard exists"},
+            {"feature": "Widgets", "standard_mode": "Matrix Widget API", "novustrix_mode": "Novustrix widget host", "fallback": "Render as link"},
+            {"feature": "Studios", "standard_mode": "m.room.type: m.studio", "novustrix_mode": "com.novustrix.studio", "fallback": "Treat as regular room"}
+          ]
+        },
+        {
+          "name": "Implementation Tasks",
+          "items": [
+            {"task": "Refactor Novustrix for standard events", "success_criteria": "Works with Element"},
+            {"task": "Polyfill system for unsupported clients", "success_criteria": "Graceful degradation"},
+            {"task": "Test interoperability", "success_criteria": "Works or fails gracefully"},
+            {"task": "Document extensions", "success_criteria": "Clear standard vs. Novustrix-only"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 4: Ecosystem Adoption",
+      "duration": "18-36 Months",
+      "goal": "Drive adoption of Novustrix MSCs across the fediverse.",
+      "tasks": [
+        {
+          "name": "Adoption Strategy",
+          "items": [
+            {"task": "Reference implementations", "success_criteria": "Other devs can build on them"},
+            {"task": "Documentation", "success_criteria": "Easy for others to adopt"},
+            {"task": "Outreach to Matrix clients", "success_criteria": "2+ other clients support MSCs"},
+            {"task": "Community building", "success_criteria": "Active contributor community"}
+          ]
+        },
+        {
+          "name": "Adoption Metrics",
+          "metrics": [
+            {"metric": "MSCs accepted", "target": "3+", "timeline": "Month 24"},
+            {"metric": "Clients supporting MSCs", "target": "3+", "timeline": "Month 30"},
+            {"metric": "Widgets in Great Repository", "target": "50+", "timeline": "Month 24"}
+          ]
+        }
+      ]
+    }
+  ],
+  "cross_cutting_concerns": {
+    "backward_compatibility": {
+      "rule": "Every feature must degrade gracefully in other clients.",
+      "implementation": ["Use standard Matrix events", "Add Novustrix extensions"]
+    },
+    "security": {
+      "widget_sandboxing": "Must work even if other clients don't sandbox",
+      "qualification_gate": "Stricter than Matrix default",
+      "audit_trail": "All widget actions logged server-side"
+    },
+    "performance": {
+      "widget_limits": "Max 3 widgets/room",
+      "fallbacks": "Static fallback if widget fails",
+      "lazy_loading": "Load widgets only when visible"
+    }
+  },
+  "risk_mitigation": [
+    {"risk": "Matrix community rejects MSCs", "mitigation": "Start with small MSCs (Widget API)", "owner": "Dev + Community"},
+    {"risk": "Standardization too slow", "mitigation": "Parallel tracks: Novustrix-first + standardization", "owner": "PM"},
+    {"risk": "Novustrix becomes a silo", "mitigation": "Prioritize interoperability", "owner": "Dev"}
+  ],
+  "success_metrics": {
+    "user_adoption": [{"metric": "Cognitive Cosmos migrated", "target": "100%", "timeline": "Month 12"}],
+    "technical": [
+      {"metric": "Novustrix alpha", "target": "Feature-complete", "timeline": "Month 6"},
+      {"metric": "Novustrix beta", "target": "Public demo", "timeline": "Month 12"}
+    ],
+    "standardization": [
+      {"metric": "1 MSC accepted", "target": "Roles or Widgets", "timeline": "Month 12"},
+      {"metric": "3 MSCs accepted", "target": "Roles, Widgets, Studios", "timeline": "Month 24"}
+    ]
+  },
+  "open_questions": [
+    "Start with Widgets or Roles MSC?",
+    "How to detect MSC support in clients?",
+    "Centralized or Matrix-native Great Repository?",
+    "Room-scoped or global Cross-Arts Bus?",
+    "How to fund development?",
+    "Is 3-5 years realistic for standardization?"
+  ],
+  "glossary": {
+    "MSC": "Matrix Specification Change",
+    "Widget Host": "Novustrix's system for rendering widgets",
+    "Qualification Gate": "Novustrix's widget vetting system",
+    "Studio": "Collaborative space (e.g., Visual Artistry)"
+  },
+  "references": [
+    {"title": "Matrix Specification", "url": "https://matrix.org/docs/spec"},
+    {"title": "Matrix Widget API", "url": "https://matrix.org/docs/spec/widget_api"}
+  ]
+}
