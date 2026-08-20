@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novustrix Radio Widget</title>
+    <script src="https://unpkg.com/matrix-widget-api@1.15.0/dist/api.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="radio-widget">
+        <header class="widget-header">
+            <h2>🎵 Novustrix Radio</h2>
+            <p class="widget-subtitle">Tunable Radio Station for Matrix Rooms</p>
+        </header>
+        
+        <div class="controls">
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="🔍 Search stations by name, genre, or country...">
+                <select id="searchType">
+                    <option value="name">Name</option>
+                    <option value="tag">Genre/Tag</option>
+                    <option value="country">Country</option>
+                    <option value="language">Language</option>
+                </select>
+                <button id="searchBtn">Search</button>
+            </div>
+            
+            <div class="filter-section">
+                <label for="countryFilter">Country:</label>
+                <select id="countryFilter">
+                    <option value="">All Countries</option>
+                </select>
+                
+                <label for="genreFilter">Genre:</label>
+                <select id="genreFilter">
+                    <option value="">All Genres</option>
+                </select>
+                
+                <label for="limit">Results:</label>
+                <select id="limit">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="player-section">
+            <div class="now-playing">
+                <div class="track-info">
+                    <h3 id="currentStation">Select a station to play</h3>
+                    <p id="currentMetadata"></p>
+                </div>
+                <div class="player-controls">
+                    <button id="prevBtn" disabled>⏮</button>
+                    <button id="playBtn" disabled>▶️</button>
+                    <button id="stopBtn" disabled>⏹️</button>
+                    <button id="nextBtn" disabled>⏭</button>
+                    <div class="volume-control">
+                        <span>🔊</span>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="70">
+                    </div>
+                </div>
+            </div>
+            <audio id="audioPlayer"></audio>
+        </div>
+        
+        <div class="results-section">
+            <h3>📡 Available Stations</h3>
+            <div class="loading" id="loadingIndicator">Loading stations...</div>
+            <div class="error" id="errorMessage"></div>
+            <div class="station-list" id="stationList"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+        
+        <div class="widget-info">
+            <p>Powered by <a href="https://www.radio-browser.info/" target="_blank">Radio Browser API</a></p>
+            <p>Stations: <span id="totalStations">0</span> | Online: <span id="onlineStations">0</span></p>
+        </div>
+    </div>
+    
+    <script src="bundle.js"></script>
+</body>
+</html>
