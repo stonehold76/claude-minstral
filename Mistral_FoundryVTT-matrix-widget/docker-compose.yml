@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  matrix-foundry-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: matrix-foundry-bridge
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      # FoundryVTT Server Configuration
+      - FOUNDRY_HOST=foundry.cognitivecosmos.games
+      - FOUNDRY_PORT=30000
+      - FOUNDRY_USE_SSL=true
+      
+      # Matrix Configuration (GameMaster bot on thedagora.social)
+      - MATRIX_HOMESERVER=https://thedagora.social/
+      - MATRIX_USERNAME=@gamemaster:thedagora.social
+      - MATRIX_ACCESS_TOKEN=place_secret_here
+      
+      # License Configuration (Your specific room)
+      - LICENSED_ROOM_ID=!ioIGXPMvsniZqjrndd:thedagora.social
+      - ENFORCE_LICENSE=true
+      
+      # Bridge Configuration
+      - BRIDGE_PORT=3001
+      - LOG_LEVEL=info
+      - DEBUG_MODE=false
+      
+      # Scene Sync Configuration
+      - SCENE_SYNC_ENABLED=true
+      - SCENE_SYNC_INTERVAL=5000
+      
+      # Features
+      - FEATURE_DICE_ROLLS=true
+      - FEATURE_CHARACTER_SYNC=true
+      - FEATURE_SCENE_SYNC=true
+      - FEATURE_LICENSE_ENFORCEMENT=true
+    volumes:
+      # Mount config file (optional - for custom configuration)
+      - ./config.json:/app/config.json:ro
+      # Persist logs
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - bridge-network
+
+networks:
+  bridge-network:
+    driver: bridge
