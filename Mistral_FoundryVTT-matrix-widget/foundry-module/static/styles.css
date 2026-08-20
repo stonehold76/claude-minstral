@@ -1,0 +1,279 @@
+/**
+ * Matrix Bridge Module Styles
+ * 
+ * CSS styles for the FoundryVTT module
+ */
+
+/* Settings dialog styles */
+.matrix-bridge-settings {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.matrix-bridge-settings:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.matrix-bridge-settings i {
+    color: #4a90d9;
+}
+
+/* Form styles */
+#matrix-bridge-settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+}
+
+#matrix-bridge-settings-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#matrix-bridge-settings-form label {
+    font-weight: bold;
+    color: #ccc;
+    font-size: 13px;
+}
+
+#matrix-bridge-settings-form input,
+#matrix-bridge-settings-form select {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#matrix-bridge-settings-form input:focus,
+#matrix-bridge-settings-form select:focus {
+    outline: none;
+    border-color: #4a90d9;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+#matrix-bridge-settings-form input[type="checkbox"] {
+    width: auto;
+    accent-color: #4a90d9;
+}
+
+#matrix-bridge-settings-form .hint {
+    font-size: 11px;
+    color: #888;
+    margin: 4px 0 0 0;
+}
+
+#matrix-bridge-settings-form .generate-token-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(74, 144, 217, 0.2);
+    border: 1px solid #4a90d9;
+    border-radius: 4px;
+    color: #4a90d9;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: fit-content;
+}
+
+#matrix-bridge-settings-form .generate-token-btn:hover {
+    background: rgba(74, 144, 217, 0.4);
+}
+
+#matrix-bridge-settings-form .generate-token-btn i {
+    color: #4a90d9;
+}
+
+/* Chat message styles */
+.matrix-bridge-message {
+    border-left: 3px solid #4a90d9;
+    padding-left: 12px;
+    margin: 8px 0;
+}
+
+.matrix-bridge-message .message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.matrix-bridge-message .message-content {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Dice roll styles */
+.matrix-bridge-roll {
+    background: rgba(74, 144, 217, 0.1);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+.matrix-bridge-roll .roll-expression {
+    font-weight: bold;
+    color: #4a90d9;
+}
+
+.matrix-bridge-roll .roll-result {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* Check result styles */
+.matrix-bridge-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 4px 0;
+}
+
+.matrix-bridge-check.success {
+    background: rgba(0, 255, 0, 0.1);
+    border-left: 3px solid #00ff00;
+}
+
+.matrix-bridge-check.failure {
+    background: rgba(255, 0, 0, 0.1);
+    border-left: 3px solid #ff0000;
+}
+
+.matrix-bridge-check.critical {
+    background: rgba(255, 215, 0, 0.1);
+    border-left: 3px solid #ffd700;
+}
+
+.matrix-bridge-check .check-name {
+    font-weight: bold;
+    min-width: 100px;
+}
+
+.matrix-bridge-check .check-result {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.matrix-bridge-check .check-dc {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Status indicator */
+.matrix-bridge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.matrix-bridge-status.connected {
+    background: rgba(0, 255, 0, 0.2);
+    color: #00ff00;
+}
+
+.matrix-bridge-status.disconnected {
+    background: rgba(255, 0, 0, 0.2);
+    color: #ff0000;
+}
+
+.matrix-bridge-status .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Button styles */
+.matrix-bridge-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(74, 144, 217, 0.2);
+    border: 1px solid #4a90d9;
+    border-radius: 4px;
+    color: #4a90d9;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.matrix-bridge-btn:hover {
+    background: rgba(74, 144, 217, 0.4);
+    text-shadow: 0 0 4px rgba(74, 144, 217, 0.5);
+}
+
+.matrix-bridge-btn:active {
+    background: rgba(74, 144, 217, 0.6);
+}
+
+.matrix-bridge-btn i {
+    color: #4a90d9;
+}
+
+/* Notification styles */
+.matrix-bridge-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #4a90d9;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.matrix-bridge-notification.success {
+    border-color: #00ff00;
+    color: #00ff00;
+}
+
+.matrix-bridge-notification.error {
+    border-color: #ff0000;
+    color: #ff0000;
+}
+
+.matrix-bridge-notification.info {
+    border-color: #4a90d9;
+    color: #4a90d9;
+}
