@@ -1,0 +1,222 @@
+{
+  "metadata": {
+    "title": "Baibot: Mistral AI Integration for Matrix Homeservers",
+    "version": "1.0",
+    "date": "2025-08-20",
+    "description": "Machine-readable instructions for integrating Mistral AI with Baibot in Matrix homeservers",
+    "author": "stonehold76",
+    "type": "installation_guide"
+  },
+  "provider": {
+    "id": "mistral",
+    "name": "Mistral AI",
+    "description": "European AI research lab providing language models",
+    "homepage": "https://mistral.ai/",
+    "sign_up_url": "https://auth.mistral.ai/ui/registration",
+    "models_url": "https://docs.mistral.ai/getting-started/models/",
+    "capabilities": ["text-generation"],
+    "notes": ["No vision support", "No tools support", "OpenAPI-compatible endpoint"]
+  },
+  "quick_start": {
+    "commands": [
+      {
+        "type": "room-local",
+        "command": "!bai agent create-room-local mistral my-mistral-agent",
+        "description": "Creates a Mistral-powered agent in the current room only"
+      },
+      {
+        "type": "global",
+        "command": "!bai agent create-global mistral my-mistral-agent",
+        "description": "Creates a Mistral-powered agent available in all rooms"
+      }
+    ],
+    "notes": "Baibot will prompt you for your API key and show the sample configuration when creating the agent"
+  },
+  "configuration": {
+    "sample_config": {
+      "file": "mistral.yml",
+      "path": "docs/sample-provider-configs/mistral.yml",
+      "url": "https://github.com/stonehold76/baibot/blob/main/docs/sample-provider-configs/mistral.yml",
+      "content": {
+        "base_url": "https://api.mistral.ai/v1",
+        "api_key": "YOUR_API_KEY_HERE",
+        "text_generation": {
+          "model_id": "mistral-large-latest",
+          "prompt": "You are a brief, but helpful bot called {{ baibot_name }} powered by the {{ baibot_model_id }} model. The date/time of this conversation's start is: {{ baibot_conversation_start_time_utc }}.",
+          "temperature": 1.0,
+          "max_response_tokens": 4096,
+          "max_context_tokens": 128000
+        }
+      }
+    },
+    "templating": {
+      "supported": true,
+      "variables": [
+        {"name": "baibot_name", "description": "Name of the bot"},
+        {"name": "baibot_model_id", "description": "Model identifier"},
+        {"name": "baibot_conversation_start_time_utc", "description": "Conversation start time in UTC"}
+      ]
+    },
+    "customization": {
+      "required": ["api_key"],
+      "optional": ["model_id", "temperature", "max_response_tokens", "max_context_tokens", "prompt"],
+      "notes": [
+        "Replace YOUR_API_KEY_HERE with your actual Mistral API key",
+        "model_id can be any supported Mistral model (e.g., mistral-small, mistral-medium, mistral-large-latest)",
+        "temperature controls randomness (0.0 to 2.0)",
+        "max_response_tokens limits response length",
+        "max_context_tokens limits context window size"
+      ]
+    }
+  },
+  "setup_steps": [
+    {
+      "step": 1,
+      "action": "Sign up for Mistral AI",
+      "url": "https://auth.mistral.ai/ui/registration",
+      "description": "Create a Mistral AI account",
+      "output": "Mistral AI account"
+    },
+    {
+      "step": 2,
+      "action": "Obtain API key",
+      "url": "https://console.mistral.ai/",
+      "description": "Get your API key from the Mistral dashboard",
+      "output": "Mistral API key"
+    },
+    {
+      "step": 3,
+      "action": "Create agent in Baibot",
+      "commands": [
+        "!bai agent create-room-local mistral my-mistral-agent",
+        "!bai agent create-global mistral my-mistral-agent"
+      ],
+      "description": "Create a Mistral agent in your Matrix room or globally",
+      "output": "Baibot will prompt for API key and show sample config"
+    },
+    {
+      "step": 4,
+      "action": "Configure agent",
+      "description": "Enter your Mistral API key when prompted",
+      "output": "Configured Mistral agent"
+    },
+    {
+      "step": 5,
+      "action": "Set as handler",
+      "description": "Set the agent as a handler for text-generation (Baibot will guide you)",
+      "output": "Working Mistral AI integration in Matrix"
+    }
+  ],
+  "code_references": {
+    "provider_implementation": {
+      "file": "src/agent/provider/mistral/mod.rs",
+      "url": "https://github.com/stonehold76/baibot/blob/main/src/agent/provider/mistral/mod.rs",
+      "notes": [
+        "Mistral provider is based on openai_compat",
+        "Base URL is hardcoded to https://api.mistral.ai/v1",
+        "Default model is mistral-large-latest"
+      ]
+    },
+    "provider_registration": {
+      "file": "src/agent/provider/mod.rs",
+      "url": "https://github.com/stonehold76/baibot/blob/main/src/agent/provider/mod.rs",
+      "notes": "Mistral module is registered here as a provider"
+    },
+    "entity_definition": {
+      "file": "src/agent/provider/entity/agent_provider.rs",
+      "url": "https://github.com/stonehold76/baibot/blob/main/src/agent/provider/entity/agent_provider.rs",
+      "notes": "Mistral is included in the AgentProvider enum"
+    }
+  },
+  "features": {
+    "text_generation": {
+      "supported": true,
+      "capabilities": ["Basic text generation"],
+      "limitations": ["No vision support", "No tools support"]
+    },
+    "vision": {"supported": false},
+    "tools": {"supported": false},
+    "audio": {"supported": false},
+    "image_generation": {"supported": false}
+  },
+  "comparison": {
+    "recommended_provider": "Venice",
+    "reason": "Venice offers more capabilities (vision, file inputs, prompt caching, web search, image generation, TTS, STT) with zero data retention",
+    "mistral_advantages": ["European-based", "Open-source models", "Strong text-generation performance"]
+  },
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "issue": "API key not accepted",
+        "solution": "Verify your API key is correct and has not expired",
+        "checks": ["Sign in to Mistral console", "Regenerate API key if needed"]
+      },
+      {
+        "issue": "Model not found",
+        "solution": "Check the model_id in your configuration",
+        "checks": ["Verify model exists at https://docs.mistral.ai/getting-started/models/", "Try mistral-large-latest as default"]
+      },
+      {
+        "issue": "Connection errors",
+        "solution": "Verify network connectivity to api.mistral.ai",
+        "checks": ["Test with curl: curl -H \"Authorization: Bearer YOUR_KEY\" https://api.mistral.ai/v1/models", "Check firewall/proxy settings"]
+      },
+      {
+        "issue": "Rate limiting",
+        "solution": "Mistral has rate limits based on your plan",
+        "checks": ["Check your Mistral dashboard for usage", "Upgrade plan if needed"]
+      }
+    ]
+  },
+  "examples": {
+    "basic_agent_creation": {
+      "command": "!bai agent create-room-local mistral my-agent",
+      "expected_output": "Baibot will prompt for API key and show configuration template"
+    },
+    "custom_config": {
+      "command": "!bai agent create-global mistral my-custom-agent",
+      "config": {
+        "base_url": "https://api.mistral.ai/v1",
+        "api_key": "YOUR_KEY",
+        "text_generation": {
+          "model_id": "mistral-small",
+          "temperature": 0.7,
+          "max_response_tokens": 2048
+        }
+      }
+    },
+    "test_connection": {
+      "command": "!bai agent test my-mistral-agent",
+      "description": "Test if the agent is working correctly"
+    }
+  },
+  "references": [
+    {
+      "title": "Baibot Providers Documentation",
+      "url": "https://github.com/stonehold76/baibot/blob/main/docs/providers.md",
+      "description": "Complete list of supported providers"
+    },
+    {
+      "title": "Mistral API Documentation",
+      "url": "https://docs.mistral.ai/",
+      "description": "Official Mistral API docs"
+    },
+    {
+      "title": "Mistral Models",
+      "url": "https://docs.mistral.ai/getting-started/models/",
+      "description": "List of available Mistral models"
+    },
+    {
+      "title": "Baibot Repository",
+      "url": "https://github.com/stonehold76/baibot",
+      "description": "Main Baibot repository"
+    }
+  ],
+  "notes": {
+    "purpose": "This JSON file provides machine-readable instructions for integrating Mistral AI with Baibot in Matrix homeservers, optimized for import into Claude or other AI tools.",
+    "audience": ["Claude", "Developers", "Matrix administrators"],
+    "version_history": [
+      {"version": "1.0", "date": "2025-08-20", "author": "stonehold76", "changes": "Initial JSON export for Mistral AI + Baibot integration"}
+    ]
+  }
+}
