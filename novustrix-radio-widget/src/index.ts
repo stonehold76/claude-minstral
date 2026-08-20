@@ -2,11 +2,10 @@
 // A Matrix widget that transforms a room into a tunable radio station
 
 import { WidgetApi } from 'matrix-widget-api';
-import { RadioBrowserApi, StationSearchType, Station, CountryResult, TagResult } from 'radio-browser-api';
-import { StationSearchType as SST } from 'radio-browser-api';
+import { RadioBrowserApi, Station, CountryResult, TagResult } from 'radio-browser-api';
 
 // Type for the search type that matches the API
-type SearchType = keyof typeof SST;
+type SearchType = 'byName' | 'byTag' | 'byCountry' | 'byLanguage' | 'byCodec' | 'byState';
 
 // Global state
 let currentStation: Station | null = null;
@@ -42,6 +41,14 @@ let volumeSlider: HTMLInputElement;
 let totalStationsDisplay: HTMLSpanElement;
 let onlineStationsDisplay: HTMLSpanElement;
 let pagination: HTMLDivElement;
+
+// Mapping from user-friendly values to API search types
+const SEARCH_TYPE_MAP: Record<string, SearchType> = {
+    'name': 'byName',
+    'tag': 'byTag',
+    'country': 'byCountry',
+    'language': 'byLanguage'
+};
 
 // Initialize the widget
 async function initWidget() {
@@ -118,7 +125,8 @@ function setupEventListeners() {
     genreFilter.addEventListener('change', () => loadStations());
     limitSelect.addEventListener('change', () => loadStations());
     searchTypeSelect.addEventListener('change', () => {
-        currentSearchType = searchTypeSelect.value as SearchType;
+        const value = searchTypeSelect.value;
+        currentSearchType = SEARCH_TYPE_MAP[value] || 'byName';
     });
     
     // Player controls
@@ -228,8 +236,9 @@ async function loadStations(page: number = 1) {
             query.tag = genreFilter.value;
         }
         
-        // Execute search
-        const result = await radioApi.getStationsBy(currentSearchType, currentSearchTerm, query);
+        // Execute search - only use search term if it's not empty
+        const searchTerm = currentSearchTerm || undefined;
+        const result = await radioApi.getStationsBy(currentSearchType, searchTerm, query);
         
         stations = result;
         totalPages = Math.ceil(result.length / limit) || 1;
@@ -250,7 +259,8 @@ async function loadStations(page: number = 1) {
 // Search stations
 function searchStations() {
     currentSearchTerm = searchInput.value.trim();
-    currentSearchType = searchTypeSelect.value as SearchType;
+    const value = searchTypeSelect.value;
+    currentSearchType = SEARCH_TYPE_MAP[value] || 'byName';
     currentPage = 1;
     loadStations(1);
 }
@@ -514,7 +524,6 @@ async function sendStationUpdate(station: Station) {
         };
         
         console.log('Would send Matrix event:', eventData);
-        // In a real implementation, you would use the widget API to send this event
         
     } catch (error) {
         console.error('Failed to send Matrix event:', error);
