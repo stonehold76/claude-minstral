@@ -1,0 +1,40 @@
+{
+  "name": "novustrix-pirate-radio",
+  "version": "1.0.0",
+  "description": "A Matrix widget that transforms a room into a live pirate radio broadcast studio, streaming to Icecast",
+  "main": "dist/index.html",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "start": "http-server . -p 8081 -c-1",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "matrix-widget-api": "^1.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "http-server": "^14.1.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "keywords": [
+    "matrix",
+    "widget",
+    "radio",
+    "broadcast",
+    "icecast",
+    "streaming",
+    "pirate",
+    "novustrix"
+  ],
+  "author": "Novustrix",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/novustrix/pirate-radio-widget"
+  }
+}

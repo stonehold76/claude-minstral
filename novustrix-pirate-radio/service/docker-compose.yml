@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Pirate Radio Broadcast Service
+  pirate-radio-service:
+    build:
+      context: .
+      dockerfile: service/Dockerfile
+    container_name: pirate-radio-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      - NODE_ENV=production
+      - PORT=8082
+      - LOG_LEVEL=info
+      - ICECAST_HOST=icecast
+      - ICECAST_PORT=8000
+      - ICECAST_MOUNT=/stream
+      - ICECAST_USERNAME=source
+      - ICECAST_PASSWORD=hackme
+      - ICECAST_STREAM_NAME=Novustrix Pirate Radio
+      - AUDIO_FORMAT=mp3
+      - AUDIO_BITRATE=128000
+      - CORS_ORIGINS=http://localhost:8080,http://localhost:8081
+    volumes:
+      - ./service/logs:/app/logs
+    depends_on:
+      - icecast
+    networks:
+      - pirate-radio-net
+
+  # Icecast Streaming Server
+  icecast:
+    image: ghcr.io/icecast/icecast-server:latest
+    container_name: icecast-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ICECAST_SOURCE_PASSWORD=hackme
+      - ICECAST_ADMIN_PASSWORD=admin
+      - ICECAST_LOCATION=Earth
+      - ICECAST_ADMIN=admin@pirate.radio
+    volumes:
+      - ./icecast/config:/etc/icecast2
+      - ./icecast/logs:/var/log/icecast
+      - ./icecast/web:/usr/share/icecast2/web
+    networks:
+      - pirate-radio-net
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: pirate-radio-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - pirate-radio-service
+      - icecast
+    networks:
+      - pirate-radio-net
+
+networks:
+  pirate-radio-net:
+    driver: bridge

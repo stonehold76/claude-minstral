@@ -1,0 +1,702 @@
+{
+  "project": {
+    "name": "Novustrix Pirate Radio",
+    "description": "Matrix widget for live voice broadcasting to Icecast internet radio stations",
+    "version": "1.0.0",
+    "created": "2026-08-20",
+    "last_updated": "2026-08-21",
+    "author": "Novustrix",
+    "license": "Apache-2.0"
+  },
+  "directory_structure": {
+    "root": "/opt/claude-minstral/novustrix-pirate-radio",
+    "components": {
+      "widget": {
+        "description": "Matrix widget (browser-based)",
+        "path": "./src",
+        "files": [
+          "index.html",
+          "index.ts",
+          "styles.css"
+        ],
+        "config_files": [
+          "package.json",
+          "tsconfig.json",
+          "webpack.config.js",
+          ".gitignore"
+        ]
+      },
+      "broadcast_service": {
+        "description": "Node.js backend for audio streaming to Icecast",
+        "path": "./service",
+        "files": [
+          "index.js",
+          "config.js",
+          "queue.js",
+          "icecast.js",
+          "websocket.js",
+          "audio.js",
+          "package.json",
+          "Dockerfile",
+          "docker-compose.yml",
+          ".env.example",
+          ".gitignore",
+          "README.md"
+        ]
+      }
+    }
+  },
+  "architecture": {
+    "overview": "Matrix Room → Widget (Browser) → WebSocket → Broadcast Service (Node.js) → FFmpeg → Icecast → Listeners",
+    "data_flow": {
+      "widget_to_service": {
+        "protocol": "WebSocket (wss://)",
+        "port": 8082,
+        "endpoint": "/ws",
+        "message_types": [
+          "join_room",
+          "leave_room", 
+          "start_broadcast",
+          "stop_broadcast",
+          "audio_chunk (binary)",
+          "icecast_config",
+          "get_state",
+          "ping"
+        ]
+      },
+      "service_to_icecast": {
+        "protocol": "Icecast Source Protocol",
+        "method": "FFmpeg stdin pipe",
+        "port": 8000,
+        "authentication": "username/password"
+      }
+    },
+    "components": {
+      "matrix_widget": {
+        "technology": "TypeScript + Matrix Widget API",
+        "responsibilities": [
+          "Microphone capture via getUserMedia()",
+          "Audio encoding (WebM/Opus)",
+          "WebSocket connection management",
+          "Queue management UI",
+          "Status display",
+          "User interface"
+        ]
+      },
+      "broadcast_service": {
+        "technology": "Node.js + Express + WebSocket",
+        "responsibilities": [
+          "WebSocket server",
+          "Room/queue management",
+          "Audio chunk buffering",
+          "FFmpeg process management",
+          "Icecast streaming",
+          "REST API (health, stats)"
+        ]
+      },
+      "icecast_server": {
+        "technology": "Icecast 2",
+        "responsibilities": [
+          "Stream hosting",
+          "Listener management",
+          "Mount point handling",
+          "Stats reporting"
+        ]
+      }
+    }
+  },
+  "key_findings": {
+    "security": [
+      {
+        "issue": "Mixed content blocking",
+        "description": "HTTPS Matrix homeservers cannot load HTTP widgets due to browser security policies",
+        "solution": "All components must be served over HTTPS (wss:// for WebSocket)",
+        "impact": "Critical - widget would not load in production Matrix servers"
+      },
+      {
+        "issue": "Iframe location detection",
+        "description": "window.location in Matrix widgets returns the homeserver URL, not the widget URL",
+        "solution": "Hardcode service URLs or pass via widget parameters",
+        "impact": "WebSocket connection would fail to wrong domain"
+      }
+    ],
+    "technical": [
+      {
+        "issue": "Browser audio streaming limitations",
+        "description": "Browsers cannot directly stream to Icecast via raw TCP/source protocol",
+        "solution": "Intermediate broadcast service using FFmpeg as source client",
+        "impact": "Required architecture design"
+      },
+      {
+        "issue": "Audio format compatibility",
+        "description": "MediaRecorder API produces WebM/Opus which needs transcoding for Icecast",
+        "solution": "FFmpeg re-encodes to MP3/Ogg/AAC for Icecast compatibility",
+        "impact": "Service must handle audio encoding"
+      }
+    ],
+    "deployment": [
+      {
+        "issue": "FFmpeg dependency",
+        "description": "Broadcast service requires FFmpeg for audio encoding",
+        "solution": "Install FFmpeg on host or in Docker container",
+        "impact": "Service will not start without FFmpeg"
+      }
+    ]
+  },
+  "deployment_options": {
+    "docker_compose": {
+      "description": "Containerized deployment with Docker",
+      "pro": [
+        "Isolated environment",
+        "Easy to deploy",
+        "Portable across systems",
+        "Version controlled"
+      ],
+      "con": [
+        "Requires Docker knowledge",
+        "Slightly higher resource usage"
+      ],
+      "services": [
+        {
+          "name": "widget",
+          "image": "nginx:alpine",
+          "port": 8081,
+          "volumes": ["./dist:/usr/share/nginx/html:ro"],
+          "purpose": "Serves static widget files"
+        },
+        {
+          "name": "service", 
+          "image": "custom (service/Dockerfile)",
+          "port": 8082,
+          "environment": [
+            "PORT=8082",
+            "ICECAST_HOST=icecast",
+            "ICECAST_PORT=8000",
+            "ICECAST_USERNAME=source",
+            "ICECAST_PASSWORD=hackme"
+          ],
+          "purpose": "Broadcast service with WebSocket"
+        },
+        {
+          "name": "icecast",
+          "image": "ghcr.io/icecast/icecast-server:latest",
+          "port": 8000,
+          "purpose": "Icecast streaming server"
+        }
+      ],
+      "network": "Custom bridge network (pirate-net)",
+      "nginx": {
+        "required": true,
+        "purpose": "HTTPS termination and reverse proxy",
+        "configuration": "Path-based routing: / → widget, /ws → service"
+      }
+    },
+    "systemd": {
+      "description": "Native system services",
+      "pro": [
+        "Direct control",
+        "Better performance",
+        "Standard Linux administration",
+        "Easier logging with journalctl"
+      ],
+      "con": [
+        "Requires manual setup",
+        "Less portable",
+        "Dependency management on host"
+      ],
+      "services": [
+        {
+          "name": "pirate-radio-service",
+          "type": "Node.js application",
+          "port": 8082,
+          "user": "node",
+          "working_directory": "/opt/claude-minstral/novustrix-pirate-radio/service"
+        },
+        {
+          "name": "pirate-radio-widget",
+          "type": "http-server",
+          "port": 8081,
+          "user": "node",
+          "working_directory": "/opt/claude-minstral/novustrix-pirate-radio"
+        },
+        {
+          "name": "icecast",
+          "type": "icecast2",
+          "port": 8000,
+          "user": "icecast2",
+          "configuration": "/etc/icecast2/icecast.xml"
+        }
+      ]
+    },
+    "recommendation": "systemd for production servers, Docker Compose for development/testing"
+  },
+  "files_created": {
+    "widget": [
+      {
+        "file": "package.json",
+        "purpose": "Widget dependencies and npm scripts",
+        "key_dependencies": ["matrix-widget-api"]
+      },
+      {
+        "file": "tsconfig.json", 
+        "purpose": "TypeScript compilation configuration"
+      },
+      {
+        "file": "webpack.config.js",
+        "purpose": "Bundles TypeScript into browser-compatible JS"
+      },
+      {
+        "file": "src/index.html",
+        "purpose": "Widget HTML structure with status, controls, queue, connection sections"
+      },
+      {
+        "file": "src/styles.css",
+        "purpose": "Matrix-themed styling matching Element UI"
+      },
+      {
+        "file": "src/index.ts",
+        "purpose": "Main widget logic: WebSocket connection, audio capture, Matrix API integration",
+        "key_functions": [
+          "connectToService()",
+          "startBroadcast()",
+          "stopBroadcast()",
+          "setupAudioRecording()",
+          "sendServiceMessage()",
+          "handleServiceMessage()"
+        ]
+      }
+    ],
+    "broadcast_service": [
+      {
+        "file": "package.json",
+        "purpose": "Service dependencies",
+        "key_dependencies": ["ws", "express", "pino", "uuid", "dotenv"]
+      },
+      {
+        "file": "config.js",
+        "purpose": "Configuration loader with environment variables",
+        "key_configs": ["PORT", "ICECAST_*", "AUDIO_*", "CORS_ORIGINS"]
+      },
+      {
+        "file": "index.js",
+        "purpose": "Main service entry point with Express server and WebSocket init"
+      },
+      {
+        "file": "queue.js",
+        "purpose": "Room queue management per Matrix room",
+        "key_methods": ["addToQueue()", "removeFromQueue()", "startBroadcast()", "stopBroadcast()"]
+      },
+      {
+        "file": "icecast.js",
+        "purpose": "FFmpeg-based Icecast streaming client",
+        "key_methods": ["start()", "stop()", "write()", "checkFFmpeg()", "buildFFmpegCommand()"]
+      },
+      {
+        "file": "websocket.js",
+        "purpose": "WebSocket server handling widget connections",
+        "key_methods": ["handleConnection()", "handleMessage()", "broadcastToRoom()"]
+      },
+      {
+        "file": "audio.js",
+        "purpose": "Audio buffering and processing utilities",
+        "classes": ["AudioBuffer", "AudioProcessor"]
+      },
+      {
+        "file": "Dockerfile",
+        "purpose": "Multi-stage Docker build with FFmpeg",
+        "stages": ["builder (dependencies)", "production (runtime)"]
+      },
+      {
+        "file": "docker-compose.yml",
+        "purpose": "Multi-container orchestration"
+      },
+      {
+        "file": ".env.example",
+        "purpose": "Configuration template"
+      },
+      {
+        "file": "README.md",
+        "purpose": "Complete documentation"
+      }
+    ]
+  },
+  "systemd_units": {
+    "pirate-radio-service.service": {
+      "description": "Broadcast service as systemd unit",
+      "type": "simple",
+      "user": "node",
+      "working_directory": "/opt/claude-minstral/novustrix-pirate-radio/service",
+      "exec_start": "/usr/bin/node /opt/claude-minstral/novustrix-pirate-radio/service/index.js",
+      "environment": [
+        "NODE_ENV=production",
+        "PORT=8082",
+        "ICECAST_HOST=localhost",
+        "ICECAST_PORT=8000",
+        "ICECAST_USERNAME=source",
+        "ICECAST_PASSWORD=hackme"
+      ],
+      "restart": "on-failure",
+      "commands": [
+        "sudo systemctl start pirate-radio-service",
+        "sudo systemctl stop pirate-radio-service",
+        "sudo systemctl restart pirate-radio-service",
+        "sudo systemctl status pirate-radio-service",
+        "sudo systemctl enable pirate-radio-service",
+        "journalctl -u pirate-radio-service -f"
+      ]
+    },
+    "pirate-radio-widget.service": {
+      "description": "Widget static server as systemd unit",
+      "type": "simple",
+      "user": "node",
+      "working_directory": "/opt/claude-minstral/novustrix-pirate-radio",
+      "exec_start": "/usr/bin/http-server . -p 8081 -c-1",
+      "requires": "http-server npm package",
+      "install": "sudo npm install -g http-server",
+      "restart": "on-failure",
+      "commands": [
+        "sudo systemctl start pirate-radio-widget",
+        "sudo systemctl stop pirate-radio-widget",
+        "sudo systemctl restart pirate-radio-widget"
+      ]
+    },
+    "icecast.service": {
+      "description": "Icecast server as systemd unit",
+      "type": "simple",
+      "user": "icecast2",
+      "exec_start": "/usr/bin/icecast2 -c /etc/icecast2/icecast.xml",
+      "requires": "icecast2 package",
+      "install": "sudo apt install icecast2",
+      "configuration": "/etc/icecast2/icecast.xml",
+      "restart": "on-failure"
+    }
+  },
+  "nginx_configuration": {
+    "description": "Reverse proxy for HTTPS termination",
+    "server_block": {
+      "listen": "443 ssl",
+      "server_name": "pirate.thedagora.social",
+      "ssl_certificate": "/etc/letsencrypt/live/pirate.thedagora.social/fullchain.pem",
+      "ssl_certificate_key": "/etc/letsencrypt/live/pirate.thedagora.social/privkey.pem",
+      "locations": {
+        "/": {
+          "proxy_pass": "http://localhost:8081",
+          "purpose": "Widget static files"
+        },
+        "/ws": {
+          "proxy_pass": "http://localhost:8082",
+          "upgrade": true,
+          "purpose": "WebSocket connection"
+        },
+        "/health": {
+          "proxy_pass": "http://localhost:8082/health",
+          "purpose": "Service health check"
+        },
+        "/stats": {
+          "proxy_pass": "http://localhost:8082/stats",
+          "purpose": "Service statistics"
+        }
+      }
+    },
+    "http_redirect": {
+      "listen": "80",
+      "return": "301 https://$server_name$request_uri"
+    }
+  },
+  "environment_variables": {
+    "service": {
+      "PORT": {
+        "default": "8082",
+        "description": "HTTP/WebSocket server port"
+      },
+      "HOST": {
+        "default": "0.0.0.0",
+        "description": "Bind address"
+      },
+      "ICECAST_HOST": {
+        "default": "localhost",
+        "description": "Icecast server hostname"
+      },
+      "ICECAST_PORT": {
+        "default": "8000",
+        "description": "Icecast server port"
+      },
+      "ICECAST_MOUNT": {
+        "default": "/stream",
+        "description": "Icecast mount point"
+      },
+      "ICECAST_USERNAME": {
+        "default": "source",
+        "description": "Icecast source username"
+      },
+      "ICECAST_PASSWORD": {
+        "default": "hackme",
+        "description": "Icecast source password",
+        "security": "CHANGE THIS IN PRODUCTION"
+      },
+      "ICECAST_STREAM_NAME": {
+        "default": "Novustrix Pirate Radio",
+        "description": "Stream name"
+      },
+      "AUDIO_FORMAT": {
+        "default": "mp3",
+        "options": ["mp3", "ogg", "aac", "opus"],
+        "description": "Output audio format"
+      },
+      "AUDIO_BITRATE": {
+        "default": "128000",
+        "description": "Audio bitrate in bps"
+      },
+      "AUDIO_SAMPLE_RATE": {
+        "default": "44100",
+        "description": "Sample rate in Hz"
+      },
+      "AUDIO_CHANNELS": {
+        "default": "2",
+        "description": "Number of audio channels"
+      },
+      "CORS_ORIGINS": {
+        "default": "http://localhost:8080,http://localhost:8081",
+        "description": "Comma-separated allowed origins"
+      },
+      "LOG_LEVEL": {
+        "default": "info",
+        "options": ["error", "warn", "info", "debug"],
+        "description": "Logging verbosity"
+      },
+      "FFMPEG_PATH": {
+        "default": "ffmpeg",
+        "description": "Path to FFmpeg binary"
+      }
+    }
+  },
+  "build_process": {
+    "widget": [
+      "npm install",
+      "npm run build",
+      "Output: dist/ directory"
+    ],
+    "service": [
+      "cd service",
+      "npm install",
+      "Ready to run"
+    ]
+  },
+  "run_process": {
+    "development": {
+      "widget": "npm start (port 8081)",
+      "service": "cd service && npm run dev (port 8082)",
+      "icecast": "icecast2 -c /etc/icecast2/icecast.xml (port 8000)"
+    },
+    "production": {
+      "docker": "docker-compose up -d",
+      "systemd": "sudo systemctl start pirate-radio-{service,widget,icecast}"
+    }
+  },
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "symptom": "SSL_ERROR_BAD_CERT_DOMAIN",
+        "cause": "Certificate does not cover the domain being accessed",
+        "solutions": [
+          "Obtain certificate with correct domain: certbot certonly -d pirate.thedagora.social",
+          "Use wildcard certificate: certbot certonly -d *.thedagora.social",
+          "Verify certificate: openssl s_client -connect pirate.thedagora.social:443 -servername pirate.thedagora.social"
+        ]
+      },
+      {
+        "symptom": "WebSocket connection failed",
+        "cause": "Wrong service URL in widget",
+        "solutions": [
+          "Hardcode SERVICE_URL in src/index.ts: const SERVICE_URL = 'wss://pirate.thedagora.social/ws'",
+          "Verify Nginx proxy: curl -I https://pirate.thedagora.social/ws should return HTTP 101",
+          "Check service logs: journalctl -u pirate-radio-service -f"
+        ]
+      },
+      {
+        "symptom": "FFmpeg not found",
+        "cause": "FFmpeg not installed on system",
+        "solutions": [
+          "Ubuntu/Debian: sudo apt install ffmpeg",
+          "macOS: brew install ffmpeg",
+          "Alpine: apk add ffmpeg",
+          "Verify: ffmpeg -version"
+        ]
+      },
+      {
+        "symptom": "No audio in stream",
+        "cause": "Multiple possible issues",
+        "solutions": [
+          "Check browser console for microphone permission errors",
+          "Verify service receives chunks: check logs for 'Sending audio chunk'",
+          "Verify Icecast connection: service logs should show 'Connected to Icecast server'",
+          "Test Icecast directly: curl http://localhost:8000/ should return HTML"
+        ]
+      },
+      {
+        "symptom": "Widget won't load in Matrix room",
+        "cause": "Mixed content or CORS issue",
+        "solutions": [
+          "Ensure widget URL is HTTPS: https://pirate.thedagora.social",
+          "Check CORS headers in Nginx",
+          "Verify CORS_ORIGINS includes Matrix homeserver URL"
+        ]
+      }
+    ],
+    "debug_commands": {
+      "check_services": "sudo systemctl status pirate-radio-{service,widget,icecast}",
+      "view_logs": {
+        "service": "journalctl -u pirate-radio-service -f",
+        "widget": "journalctl -u pirate-radio-widget -f",
+        "icecast": "journalctl -u icecast -f",
+        "nginx": "sudo tail -f /var/log/nginx/error.log"
+      },
+      "test_connections": {
+        "widget": "curl http://localhost:8081",
+        "service": "curl http://localhost:8082/health",
+        "icecast": "curl http://localhost:8000/",
+        "websocket": "wscat -c ws://localhost:8082/ws"
+      },
+      "network": {
+        "check_ports": "sudo netstat -tulnp | grep -E '(8081|8082|8000)'",
+        "test_ssl": "openssl s_client -connect pirate.thedagora.social:443 -servername pirate.thedagora.social"
+      }
+    }
+  },
+  "recommendations": {
+    "production": [
+      {
+        "title": "Use systemd for production servers",
+        "reason": "Better integration with Linux, proper process management, journalctl logging"
+      },
+      {
+        "title": "Always use HTTPS",
+        "reason": "Matrix homeservers are HTTPS-only, mixed content is blocked"
+      },
+      {
+        "title": "Use strong Icecast passwords",
+        "reason": "Prevent unauthorized streaming to your server"
+      },
+      {
+        "title": "Enable Nginx security headers",
+        "reason": "Protect against XSS, clickjacking, etc."
+      },
+      {
+        "title": "Monitor service health",
+        "reason": "Detect issues early with health checks"
+      },
+      {
+        "title": "Set up log rotation",
+        "reason": "Prevent log files from growing too large"
+      }
+    ],
+    "development": [
+      {
+        "title": "Use Docker Compose for local testing",
+        "reason": "Easy to start/stop all services together"
+      },
+      {
+        "title": "Enable debug logging",
+        "reason": "LOG_LEVEL=debug for detailed troubleshooting"
+      },
+      {
+        "title": "Use localhost URLs",
+        "reason": "Avoid DNS issues during development"
+      }
+    ],
+    "security": [
+      {
+        "title": "Restrict CORS origins",
+        "reason": "Only allow trusted Matrix homeserver domains"
+      },
+      {
+        "title": "Use firewall rules",
+        "reason": "Only expose necessary ports (80, 443)"
+      },
+      {
+        "title": "Keep software updated",
+        "reason": "Regularly update Node.js, Nginx, Icecast, and dependencies"
+      },
+      {
+        "title": "Consider authentication",
+        "reason": "Add token-based auth for WebSocket connections"
+      }
+    ]
+  },
+  "next_steps": {
+    "immediate": [
+      "1. Choose deployment method (Docker Compose or systemd)",
+      "2. Update src/index.ts with correct SERVICE_URL (wss://pirate.thedagora.social/ws)",
+      "3. Rebuild widget: npm run build",
+      "4. Configure Nginx reverse proxy",
+      "5. Start all services",
+      "6. Add widget to Matrix room using https://pirate.thedagora.social"
+    ],
+    "testing": [
+      "1. Test widget loads in Matrix room",
+      "2. Test 'Connect to Icecast' button",
+      "3. Test 'Start Broadcast' with microphone",
+      "4. Verify audio plays in VLC: open http://localhost:8000/stream",
+      "5. Test multiple users in queue"
+    ],
+    "enhancements": [
+      {
+        "priority": "high",
+        "task": "Add listener count from Icecast admin API",
+        "file": "service/icecast.js",
+        "method": "getListenerStats()"
+      },
+      {
+        "priority": "medium",
+        "task": "Implement queue request via Matrix messages",
+        "file": "src/index.ts",
+        "description": "Allow users to request broadcast via Matrix commands"
+      },
+      {
+        "priority": "medium",
+        "task": "Add VU meter visualization",
+        "file": "src/index.ts",
+        "description": "Show audio levels in widget UI"
+      },
+      {
+        "priority": "low",
+        "task": "Add per-room Icecast configuration",
+        "description": "Allow different rooms to stream to different Icecast servers"
+      }
+    ]
+  },
+  "resources": {
+    "documentation": [
+      {
+        "title": "Matrix Widget API",
+        "url": "https://github.com/matrix-org/matrix-widget-api",
+        "description": "Official Matrix Widget API documentation"
+      },
+      {
+        "title": "Icecast Documentation",
+        "url": "https://icecast.org/docs/icecast-trunk/",
+        "description": "Icecast server documentation"
+      },
+      {
+        "title": "FFmpeg Documentation",
+        "url": "https://ffmpeg.org/documentation.html",
+        "description": "FFmpeg command reference"
+      }
+    ],
+    "examples": [
+      {
+        "title": "Novustrix Radio Widget",
+        "path": "/opt/claude-minstral/novustrix-radio-widget",
+        "description": "Reference implementation for radio listening widget"
+      }
+    ]
+  },
+  "metadata": {
+    "created_by": "Mistral Vibe CLI",
+    "created_at": "2026-08-21T03:22:00Z",
+    "format": "JSON",
+    "version": "1.0",
+    "purpose": "Project summary for import into Claude Code",
+    "notes": "This file contains complete project documentation, findings, and recommendations for the Novustrix Pirate Radio project."
+  }
+}

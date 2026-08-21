@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novustrix Pirate Radio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="widget-container">
+        <header class="widget-header">
+            <h1>🏴‍☠️ Novustrix Pirate Radio</h1>
+            <p class="subtitle">Live Broadcast from Matrix</p>
+        </header>
+
+        <main class="widget-main">
+            <!-- Status Section -->
+            <section class="status-section">
+                <div class="status-indicator" id="broadcastStatus">
+                    <span class="status-icon" id="statusIcon">●</span>
+                    <span class="status-text" id="statusText">Off Air</span>
+                </div>
+                <div class="broadcaster-info" id="broadcasterInfo">
+                    No one is currently broadcasting
+                </div>
+            </section>
+
+            <!-- Controls Section -->
+            <section class="controls-section">
+                <div class="control-group">
+                    <button class="btn btn-primary" id="startBroadcastBtn" disabled>
+                        🎤 Start Broadcast
+                    </button>
+                    <button class="btn btn-danger" id="stopBroadcastBtn" disabled>
+                        ⏹️ Stop Broadcast
+                    </button>
+                </div>
+                <div class="control-group">
+                    <label for="volumeSlider">Input Volume:</label>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="80">
+                    <span id="volumeValue">80%</span>
+                </div>
+            </section>
+
+            <!-- Queue Section -->
+            <section class="queue-section">
+                <h3>Broadcast Queue</h3>
+                <div class="queue-list" id="queueList">
+                    <p class="empty-state">No one in queue</p>
+                </div>
+            </section>
+
+            <!-- Connection Section -->
+            <section class="connection-section">
+                <h3>Icecast Connection</h3>
+                <div class="connection-info">
+                    <div class="form-group">
+                        <label for="icecastUrl">Icecast Server URL:</label>
+                        <input type="text" id="icecastUrl" 
+                               placeholder="http://localhost:8000/mount" 
+                               value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="icecastUser">Username:</label>
+                        <input type="text" id="icecastUser" placeholder="source" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="icecastPass">Password:</label>
+                        <input type="password" id="icecastPass" placeholder="hackme" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="streamName">Stream Name:</label>
+                        <input type="text" id="streamName" 
+                               placeholder="Novustrix Pirate Radio" 
+                               value="">
+                    </div>
+                    <button class="btn btn-secondary" id="connectBtn">
+                        Connect to Icecast
+                    </button>
+                </div>
+                <div class="connection-status" id="connectionStatus">
+                    Not connected
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats-section">
+                <h3>Stream Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Listeners:</span>
+                        <span class="stat-value" id="listenerCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Bitrate:</span>
+                        <span class="stat-value" id="bitrateValue">128 kbps</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Uptime:</span>
+                        <span class="stat-value" id="uptimeValue">00:00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Format:</span>
+                        <span class="stat-value" id="formatValue">MP3</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="widget-footer">
+            <p>Powered by Matrix & Icecast</p>
+        </footer>
+    </div>
+
+    <!-- Hidden audio elements -->
+    <audio id="audioMonitor" style="display: none;"></audio>
+    
+    <script src="bundle.js"></script>
+</body>
+</html>
